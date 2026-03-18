@@ -235,9 +235,35 @@
     .new-password-fields { display: none; }
     .new-password-fields.show { display: block; }
 
+    /* Admin code field */
+    .admin-code-group { display: none; }
+    .admin-code-group.show { display: block; }
+    .admin-code-hint {
+      font-size: 0.75rem;
+      color: #c62828;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
     @media (max-width: 480px) {
-      .auth-header { padding: 24px 20px 18px; }
-      .auth-body { padding: 20px; }
+      body { padding: 10px; }
+      .auth-container { border-radius: 16px; }
+      .auth-header { padding: 24px 16px 18px; }
+      .auth-header .auth-title { font-size: 1.15rem; }
+      .auth-header .auth-subtitle { font-size: 0.75rem; }
+      .auth-body { padding: 18px; }
+      .auth-tabs { margin-bottom: 18px; }
+      .auth-tab { padding: 9px; font-size: 0.82rem; }
+      .form-input, .form-select { padding: 10px 12px; font-size: 0.9rem; }
+      .auth-btn { padding: 12px; font-size: 0.92rem; }
+      .forgot-link { font-size: 0.78rem; }
+      .admin-section-title { font-size: 0.85rem; }
+    }
+
+    @media (max-width: 360px) {
+      .auth-header .auth-logo { font-size: 1.8rem; }
+      .auth-header .auth-title { font-size: 1rem; }
+      .auth-body { padding: 14px; }
     }
   </style>
 </head>
@@ -329,10 +355,16 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="reg-role">I am a…</label>
-        <select class="form-select" id="reg-role" required>
+        <select class="form-select" id="reg-role" required onchange="onRegRoleChange()">
           <option value="student">🎵 Student</option>
           <option value="instructor">👩‍🏫 Instructor</option>
+          <option value="admin">🔑 Administrator</option>
         </select>
+      </div>
+      <div class="form-group admin-code-group" id="admin-code-group">
+        <label class="form-label" for="reg-admin-code">Admin Access Code</label>
+        <input class="form-input" id="reg-admin-code" type="password" placeholder="Enter admin access code" />
+        <div class="admin-code-hint">Required to register as Administrator. Contact your school admin for the code.</div>
       </div>
       <button class="auth-btn" type="submit">Create Account</button>
     </form>
@@ -485,7 +517,22 @@ function handleLogin(e) {
   window.location.href = 'index.html';
 }
 
-// ── Register (Student or Instructor only) ───────────────────────────────
+// ── Admin code — only required when registering as Administrator ─────────
+// Default code: "HappyMinds2026" — change this to your school's secret code
+const ADMIN_ACCESS_CODE = 'HappyMinds2026';
+
+function onRegRoleChange() {
+  const role = document.getElementById('reg-role').value;
+  const codeGroup = document.getElementById('admin-code-group');
+  if (role === 'admin') {
+    codeGroup.classList.add('show');
+  } else {
+    codeGroup.classList.remove('show');
+    document.getElementById('reg-admin-code').value = '';
+  }
+}
+
+// ── Register (Student, Instructor, or Admin with code) ──────────────────
 function handleRegister(e) {
   e.preventDefault();
   hideMessages();
@@ -502,6 +549,19 @@ function handleRegister(e) {
   if (password.length < 6) {
     showError('Password must be at least 6 characters.');
     return;
+  }
+
+  // Admin registration requires a valid access code
+  if (role === 'admin') {
+    const code = document.getElementById('reg-admin-code').value.trim();
+    if (!code) {
+      showError('Admin access code is required to register as Administrator.');
+      return;
+    }
+    if (code !== ADMIN_ACCESS_CODE) {
+      showError('Invalid admin access code. Contact your school administrator.');
+      return;
+    }
   }
 
   const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
@@ -532,13 +592,16 @@ function handleRegister(e) {
     }
   }
 
-  showSuccess('Account created! You can now sign in.');
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  showSuccess(`${roleLabel} account created! You can now sign in.`);
 
   // Clear form and switch to login
   document.getElementById('reg-name').value = '';
   document.getElementById('reg-email').value = '';
   document.getElementById('reg-password').value = '';
   document.getElementById('reg-role').value = 'student';
+  document.getElementById('reg-admin-code').value = '';
+  document.getElementById('admin-code-group').classList.remove('show');
 
   setTimeout(() => switchTab('login'), 1200);
 }

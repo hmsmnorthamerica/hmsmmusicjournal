@@ -1433,14 +1433,106 @@
     /* Hide body until session check */
     .app-hidden { display: none !important; }
 
+    /* ── Mobile Responsive ── */
     @media (max-width: 600px) {
+      body { padding: 10px; }
+      h1.app-title { font-size: 1.3rem; }
+      .app-subtitle { font-size: 0.78rem; }
+
+      /* Welcome bar */
+      .welcome-bar { padding: 10px 14px; flex-direction: column; gap: 8px; text-align: center; }
+      .welcome-info { justify-content: center; }
+      .welcome-name { font-size: 0.9rem; }
+      .logout-btn { width: 100%; text-align: center; }
+
+      /* Tabs */
+      .tabs { gap: 6px; }
+      .tab-btn { padding: 7px 12px; font-size: 0.78rem; }
+
+      /* Journal card */
       .journal-header { grid-template-columns: 1fr; }
       .header-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
       .section-row { grid-template-columns: 1fr; }
       .section-label-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
+
+      /* Role toggle */
+      .role-toggle { gap: 6px; }
+      .role-btn { padding: 6px 14px; font-size: 0.8rem; }
+
+      /* Song lines: stack vertically on small screens */
+      .song-line { flex-wrap: wrap; }
+      .song-day-circles { margin-left: 24px; }
+      .song-days-header { display: none; }
+
+      /* Time table */
+      .time-input { width: 42px; font-size: 0.75rem; padding: 3px; }
+      .time-table th { font-size: 0.7rem; padding: 6px 3px; }
+
+      /* Reward buttons */
+      .reward-options { gap: 6px; }
+      .reward-btn { width: 38px; height: 38px; font-size: 0.85rem; }
+      .grade-btn { padding: 5px 8px; }
+      .grade-emoji { font-size: 1.1rem; }
+      .grade-label { font-size: 0.6rem; }
+
+      /* Footer buttons */
+      .journal-footer { flex-direction: column; }
+      .journal-footer .btn { width: 100%; text-align: center; }
+
+      /* History cards */
+      .history-card-header { flex-direction: column; gap: 6px; }
+      .history-summary { gap: 8px; }
+      .summary-badge { font-size: 0.72rem; }
+
+      /* Resources forms */
       .res-form-row { grid-template-columns: 1fr; }
       .res-entry-header { flex-direction: column; gap: 6px; }
-      .welcome-bar { padding: 10px 14px; }
+      .res-search-bar { flex-direction: column; }
+
+      /* Admin tables */
+      .admin-table { font-size: 0.75rem; }
+      .admin-table th, .admin-table td { padding: 6px 4px; }
+      .admin-edit-input { width: 42px; }
+      .admin-instrument-header { flex-direction: column; gap: 4px; text-align: center; }
+
+      /* Admin panels */
+      .admin-wrap { gap: 12px; }
+      .admin-totals-row { flex-direction: column; }
+
+      /* Stats cards */
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+      .stat-card { padding: 12px; }
+      .stat-value { font-size: 1.4rem; }
+
+      /* Charts */
+      .chart-toggle { gap: 4px; }
+      .chart-toggle-btn { padding: 4px 10px; font-size: 0.72rem; }
+
+      /* Leaderboard */
+      .leaderboard-card { min-width: 140px; padding: 12px; }
+      .leaderboard-card .lb-value { font-size: 1.2rem; }
+
+      /* Settings */
+      .settings-card { padding: 16px; }
+
+      /* Modal */
+      .modal { padding: 20px; }
+
+      /* Day circles */
+      .day-circles { gap: 5px; }
+      .day-circle { width: 28px; height: 28px; }
+
+      /* Archive */
+      .archive-toolbar { flex-direction: column; }
+      .archive-search { min-width: 100%; }
+    }
+
+    @media (max-width: 380px) {
+      h1.app-title { font-size: 1.1rem; }
+      .tabs { gap: 4px; }
+      .tab-btn { padding: 6px 8px; font-size: 0.7rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .detail-time-row { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
@@ -1918,6 +2010,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="security-rules.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -2231,6 +2324,17 @@ function renderHistory() {
 
   // Filter preserving original indices
   let filtered = allHistory.map((entry, origIdx) => ({ entry, origIdx }));
+
+  // ── SECURITY: Role-based history filtering (from security-rules.js) ──
+  //   Student    → sees only their OWN journal entries
+  //   Instructor → sees entries for their ASSIGNED students only
+  //   Admin      → sees ALL entries from every student
+  if (currentSession && window.SecurityRules && window.SecurityRules.canViewJournalEntry) {
+    filtered = filtered.filter(({ entry }) =>
+      window.SecurityRules.canViewJournalEntry(currentSession, entry)
+    );
+  }
+
   if (query) {
     filtered = filtered.filter(({ entry }) =>
       (entry.date || '').includes(query) ||
@@ -2392,10 +2496,7 @@ function buildHistoryCard(entry, origIdx, cardId) {
     buildSongSection('Top Priority to Practice', entry.prioritySongs || [], entry.prioritySongDays || []) +
     buildSongSection('Other Exercises / Songs', entry.otherSongs || [], entry.otherSongDays || []) +
     timeHtml + rewardsHtml + commentsHtml +
-    `<div class="detail-actions">
-      <button class="btn btn-primary" style="font-size:0.8rem;padding:7px 16px;" data-entry-idx="${origIdx}">✏️ Edit in Journal</button>
-      <button class="btn btn-danger" style="font-size:0.8rem;padding:7px 16px;" data-delete-idx="${origIdx}">🗑 Delete</button>
-    </div>`;
+    buildDetailActions(entry, origIdx);
 
   card.appendChild(detail);
 
@@ -2410,6 +2511,33 @@ function buildHistoryCard(entry, origIdx, cardId) {
   header.querySelector(`#expand-btn-${cardId}`).addEventListener('click', toggle);
 
   return card;
+}
+
+// ── SECURITY: Build Edit/Delete buttons based on the user's role ────────
+//   Student    → ✏️ Edit (own practice only) | 🗑 Delete hidden
+//   Instructor → ✏️ Edit + 🗑 Delete (assigned students only)
+//   Admin      → ✏️ Edit + 🗑 Delete (ALL entries)
+function buildDetailActions(entry, origIdx) {
+  let html = '<div class="detail-actions">';
+  const rules = window.SecurityRules;
+  const user  = currentSession;
+
+  if (user && rules && rules.canEditJournalEntry && rules.canDeleteJournalEntry) {
+    // Show Edit button if the user has permission to edit this entry
+    const canEdit = rules.canEditJournalEntry(user, entry);
+    if (canEdit.allowed) {
+      html += `<button class="btn btn-primary" style="font-size:0.8rem;padding:7px 16px;" data-entry-idx="${origIdx}">✏️ Edit in Journal</button>`;
+    }
+
+    // Show Delete button only for instructors (assigned) and admins — never students
+    const canDelete = rules.canDeleteJournalEntry(user, entry);
+    if (canDelete.allowed) {
+      html += `<button class="btn btn-danger" style="font-size:0.8rem;padding:7px 16px;" data-delete-idx="${origIdx}">🗑 Delete</button>`;
+    }
+  }
+
+  html += '</div>';
+  return html;
 }
 
 function loadEntry(entry) {
@@ -2493,14 +2621,39 @@ function applyRoleToForm() {
   const status = state.status;
   const isStudent = role === 'student';
   const isInstructor = role === 'instructor';
+  const isAdmin = currentSession && currentSession.role === 'admin';
   const isPending = status === 'practice_submitted';
   const isCompleted = status === 'completed';
 
+  // Admin has full access to everything (never locked out)
+  if (isAdmin) {
+    // Admins can edit all fields regardless of status
+    ['inp-date','inp-subject','inp-student-name','inp-instructor'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = false;
+    });
+    document.querySelectorAll('.song-input').forEach(el => { el.disabled = false; });
+    document.querySelectorAll('#time-row input').forEach(el => { el.disabled = false; });
+    const tog = (sel) => document.querySelectorAll(sel).forEach(el => el.classList.remove('wf-disabled'));
+    tog('#day-circles .day-circle');
+    tog('.song-day-dot');
+    tog('#class-perf-stars .grade-btn');
+    tog('#stamps .reward-btn');
+    tog('#coins .reward-btn');
+    const commentsEl = document.getElementById('instructor-comments');
+    const questionsEl = document.getElementById('student-questions');
+    if (commentsEl) commentsEl.disabled = false;
+    if (questionsEl) questionsEl.disabled = false;
+    updateStatusStrip();
+    renderFooterButtons();
+    return;
+  }
+
   // Which groups are editable?
   const editHeader    = isInstructor && !isPending && !isCompleted;
-  const editSongNames = isInstructor && !isCompleted; // instructor can always edit songs
+  const editSongNames = isInstructor && !isCompleted;
   const editClassPerf = isInstructor && !isCompleted;
-  const editPractice  = isStudent && !isCompleted;
+  const editPractice  = isStudent && !isCompleted; // Students can edit practice logs
   const editRewards   = isInstructor && isPending;
 
   // Text inputs
@@ -2521,9 +2674,10 @@ function applyRoleToForm() {
   tog('#stamps .reward-btn', !editRewards);
   tog('#coins .reward-btn', !editRewards);
 
-  // Textareas: instructor comments locked for students; student questions locked for instructors
+  // Textareas
   const commentsEl = document.getElementById('instructor-comments');
   const questionsEl = document.getElementById('student-questions');
+  // Student can write questions; instructor can write feedback
   if (commentsEl) commentsEl.disabled = isStudent || isCompleted;
   if (questionsEl) questionsEl.disabled = isInstructor || isCompleted;
 
@@ -2556,13 +2710,23 @@ function renderFooterButtons() {
   if (!footer) return;
   const status = state.status;
   const isStudent = role === 'student';
+  const isAdmin = currentSession && currentSession.role === 'admin';
   const isCompleted = status === 'completed';
   const isPending = status === 'practice_submitted';
 
   let html = `<button class="btn btn-secondary" onclick="clearForm()">Clear</button>
     <button class="btn btn-primary" onclick="printJournal()">🖨 Print</button>`;
 
-  if (isCompleted) {
+  // Admin gets full control buttons — can save, complete, or reopen at any status
+  if (isAdmin) {
+    html += `<button class="btn btn-email" onclick="openEmailModal()">✉️ Send Email</button>
+      <button class="btn btn-save" onclick="saveEntry()">💾 Save Entry</button>`;
+    if (!isCompleted) {
+      html += `<button class="btn btn-save" style="background:#5556a8;" onclick="instructorComplete()">⭐ Complete &amp; Notify</button>`;
+    } else {
+      html += `<span class="status-badge status-completed" style="padding:8px 16px;font-size:0.85rem;">✅ Complete</span>`;
+    }
+  } else if (isCompleted) {
     html += `<span class="status-badge status-completed" style="padding:8px 16px;font-size:0.85rem;">✅ Journal Complete</span>`;
   } else if (isStudent) {
     if (status === 'created') {
@@ -2975,7 +3139,22 @@ function closeEmailModal() {
 }
 
 // ─── Archive actions ──────────────────────────────────────────────────────────
+// ── SECURITY: Delete entry — permission check before deleting ────────────
+//   Student    → BLOCKED (cannot delete entries)
+//   Instructor → allowed for assigned students only
+//   Admin      → allowed for any entry
 function deleteEntry(origIdx) {
+  if (currentSession && window.SecurityRules && window.SecurityRules.canDeleteJournalEntry) {
+    const history = loadHistory();
+    const entry = history[origIdx];
+    if (entry) {
+      const permission = window.SecurityRules.canDeleteJournalEntry(currentSession, entry);
+      if (!permission.allowed) {
+        showToast(permission.reason || 'You do not have permission to delete this entry.');
+        return;
+      }
+    }
+  }
   if (!confirm('Delete this journal entry? This cannot be undone.')) return;
   const history = loadHistory();
   history.splice(origIdx, 1);
@@ -3788,15 +3967,21 @@ function initSession() {
   if (!raw) { window.location.href = 'auth.html'; return; }
   try {
     const s = JSON.parse(raw);
-    if (!s || !s.email || !s.role) { window.location.href = 'auth.html'; }
+    if (!s || !s.email || !s.role) { window.location.href = 'auth.html'; return; }
+    // Set currentSession early so it's available during initial render
+    currentSession = s;
   } catch(e) { window.location.href = 'auth.html'; }
 })();
 
-// Hook into DOMContentLoaded to init session after existing init
-const originalDCL = document.addEventListener;
+// Hook into DOMContentLoaded to init session UI after existing init
 document.addEventListener('DOMContentLoaded', function sessionInit() {
   // Small delay to ensure existing DOMContentLoaded handler ran first
-  setTimeout(initSession, 10);
+  setTimeout(function() {
+    initSession();
+    // Re-render history and stats with role-based filtering now active
+    renderHistory();
+    renderStats();
+  }, 10);
 });
 </script>
 
