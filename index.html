@@ -1385,6 +1385,51 @@
       border-color: #5556a8;
     }
 
+    /* Admin inline messages */
+    .auth-error {
+      background: #fff0f0;
+      color: #c44;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1.5px solid #fdd;
+    }
+    .auth-success {
+      background: #f0fff4;
+      color: #2d7a3a;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1.5px solid #c6f6d5;
+    }
+    .role-badge-inline {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .rb-student { background: #e8f5e9; color: #2e7d32; }
+    .rb-instructor { background: #e3f2fd; color: #1565c0; }
+    .rb-admin { background: #fce4ec; color: #c62828; }
+    .admin-action-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1.5px solid #c5caf5;
+      background: white;
+      color: #5556a8;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .admin-action-btn:hover { background: #f0f0ff; border-color: #5556a8; }
+    .admin-action-btn.danger { border-color: #fcc; color: #c22; }
+    .admin-action-btn.danger:hover { background: #fff0f0; }
+
     /* Hide body until session check */
     .app-hidden { display: none !important; }
 
@@ -1692,7 +1737,79 @@
 <div id="tab-admin" style="display:none;">
   <div class="admin-wrap">
     <div class="admin-title">🔑 Administrator Dashboard</div>
-    <div class="admin-subtitle">View all entries by instrument — manage stamps &amp; coins</div>
+    <div class="admin-subtitle">Full access — manage users, view all data, edit all entries</div>
+
+    <!-- Admin: User Management -->
+    <div class="resource-form-card" id="admin-users-panel">
+      <h3>👥 User Management</h3>
+      <div class="table-wrap" style="overflow-x:auto;">
+        <table class="admin-table" id="admin-users-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Assigned Teacher</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Admin: Create User -->
+    <div class="resource-form-card" id="admin-create-user-panel">
+      <h3>➕ Create New User</h3>
+      <div style="font-size:0.82rem;color:#999;margin-bottom:14px;">Admins can create accounts of any role, including other Administrators.</div>
+      <div class="res-form-row">
+        <div class="res-field">
+          <label class="res-label">Full Name</label>
+          <input class="res-input" id="admin-cu-name" type="text" placeholder="Jane Smith" required />
+        </div>
+        <div class="res-field">
+          <label class="res-label">Email</label>
+          <input class="res-input" id="admin-cu-email" type="email" placeholder="user@example.com" required />
+        </div>
+      </div>
+      <div class="res-form-row">
+        <div class="res-field">
+          <label class="res-label">Password</label>
+          <input class="res-input" id="admin-cu-password" type="password" placeholder="At least 6 characters" minlength="6" required />
+        </div>
+        <div class="res-field">
+          <label class="res-label">Role</label>
+          <select class="res-select" id="admin-cu-role">
+            <option value="student">🎵 Student</option>
+            <option value="instructor">👩‍🏫 Instructor</option>
+            <option value="admin">🔑 Administrator</option>
+          </select>
+        </div>
+      </div>
+      <button class="res-save-btn" onclick="adminCreateUser()">➕ Create User</button>
+      <div class="auth-error" id="admin-cu-error" style="display:none;margin-top:12px;"></div>
+      <div class="auth-success" id="admin-cu-success" style="display:none;margin-top:12px;"></div>
+    </div>
+
+    <!-- Assign Instructor to Student -->
+    <div class="resource-form-card" id="admin-assign-panel">
+      <h3>🔗 Assign Instructor to Student</h3>
+      <div style="font-size:0.82rem;color:#999;margin-bottom:14px;">Select a student and an instructor to link them together.</div>
+      <div class="res-form-row">
+        <div class="res-field">
+          <label class="res-label">Student</label>
+          <select class="res-select" id="admin-assign-student"></select>
+        </div>
+        <div class="res-field">
+          <label class="res-label">Instructor</label>
+          <select class="res-select" id="admin-assign-instructor"></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="res-save-btn" onclick="adminAssignInstructor()">🔗 Assign</button>
+        <button class="res-save-btn" style="background:#e05555;" onclick="adminUnassignInstructor()">✂️ Unassign</button>
+      </div>
+    </div>
 
     <!-- Top Performers -->
     <div id="admin-leaderboard" style="display:none;">
@@ -2985,6 +3102,9 @@ function saveRedemptions(data) {
 }
 
 function renderAdmin() {
+  // Render the user management table
+  renderAdminUsersTable();
+
   const history = loadHistory();
   const container = document.getElementById('admin-content');
   const redemptions = loadRedemptions();
@@ -3383,6 +3503,204 @@ function renderResources() {
   `).join('');
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ADMIN: User Management, Create User, Assign Instructor
+// ═══════════════════════════════════════════════════════════════════════════
+
+function loadAllUsers() {
+  return JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+}
+
+function renderAdminUsersTable() {
+  const users = loadAllUsers();
+  const tbody = document.getElementById('admin-users-tbody');
+  if (!tbody) return;
+
+  const roleBadge = (r) => {
+    const map = { student: 'rb-student', instructor: 'rb-instructor', admin: 'rb-admin' };
+    const labels = { student: '🎵 Student', instructor: '👩‍🏫 Instructor', admin: '🔑 Admin' };
+    return `<span class="role-badge-inline ${map[r] || ''}">${labels[r] || r}</span>`;
+  };
+
+  tbody.innerHTML = users.map((u, i) => {
+    const teacher = u.instructorId
+      ? (users.find(t => t.email === u.instructorId) || {}).name || u.instructorId
+      : (u.role === 'student' ? '<span style="color:#ccc;font-style:italic">Unassigned</span>' : '—');
+
+    return `<tr>
+      <td style="font-weight:600;color:#3a3a6e;">${u.name}</td>
+      <td style="font-size:0.82rem;color:#666;">${u.email}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${teacher}</td>
+      <td>
+        <button class="admin-action-btn danger" onclick="adminDeleteUser('${u.email}')" title="Delete user">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Populate assign dropdowns
+  renderAssignDropdowns(users);
+}
+
+function renderAssignDropdowns(users) {
+  const studentSelect = document.getElementById('admin-assign-student');
+  const instructorSelect = document.getElementById('admin-assign-instructor');
+  if (!studentSelect || !instructorSelect) return;
+
+  const students = users.filter(u => u.role === 'student');
+  const instructors = users.filter(u => u.role === 'instructor');
+
+  studentSelect.innerHTML = students.length === 0
+    ? '<option value="">No students registered</option>'
+    : students.map(s => {
+        const assigned = s.instructorId ? ` (→ ${s.instructorId})` : ' (Unassigned)';
+        return `<option value="${s.email}">${s.name}${assigned}</option>`;
+      }).join('');
+
+  instructorSelect.innerHTML = instructors.length === 0
+    ? '<option value="">No instructors registered</option>'
+    : instructors.map(t => `<option value="${t.email}">${t.name}</option>`).join('');
+}
+
+function adminCreateUser() {
+  const errEl = document.getElementById('admin-cu-error');
+  const sucEl = document.getElementById('admin-cu-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  const name = document.getElementById('admin-cu-name').value.trim();
+  const email = document.getElementById('admin-cu-email').value.trim().toLowerCase();
+  const password = document.getElementById('admin-cu-password').value;
+  const role = document.getElementById('admin-cu-role').value;
+
+  if (!name || !email || !password) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const users = loadAllUsers();
+  if (users.some(u => u.email.toLowerCase() === email)) {
+    errEl.textContent = 'An account with that email already exists.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const newUser = {
+    name, email, password, role,
+    instructorId: role === 'student' ? null : undefined,
+    studentsList: role === 'instructor' ? [] : undefined,
+    createdAt: Date.now()
+  };
+  users.push(newUser);
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+
+  // Initialize balance for students
+  if (role === 'student') {
+    const balances = JSON.parse(localStorage.getItem('mj_balances') || '{}');
+    if (!balances[email]) {
+      balances[email] = { stamps: 0, coins: 0 };
+      localStorage.setItem('mj_balances', JSON.stringify(balances));
+    }
+  }
+
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+  sucEl.textContent = `${roleLabel} account "${name}" created successfully!`;
+  sucEl.style.display = 'block';
+
+  document.getElementById('admin-cu-name').value = '';
+  document.getElementById('admin-cu-email').value = '';
+  document.getElementById('admin-cu-password').value = '';
+  document.getElementById('admin-cu-role').value = 'student';
+
+  renderAdminUsersTable();
+  showToast(`${roleLabel} "${name}" created! ✅`);
+}
+
+function adminDeleteUser(email) {
+  // Prevent deleting yourself
+  if (currentSession && currentSession.email === email) {
+    alert('You cannot delete your own account while logged in.');
+    return;
+  }
+  if (!confirm(`Delete user "${email}"? This cannot be undone.`)) return;
+
+  let users = loadAllUsers();
+  users = users.filter(u => u.email !== email);
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+
+  renderAdminUsersTable();
+  renderAdmin();
+  showToast('User deleted.');
+}
+
+function adminAssignInstructor() {
+  const studentEmail = document.getElementById('admin-assign-student').value;
+  const instructorEmail = document.getElementById('admin-assign-instructor').value;
+
+  if (!studentEmail || !instructorEmail) {
+    showToast('Please select both a student and an instructor.');
+    return;
+  }
+
+  const users = loadAllUsers();
+  const student = users.find(u => u.email === studentEmail);
+  const instructor = users.find(u => u.email === instructorEmail);
+
+  if (!student || !instructor) {
+    showToast('User not found.');
+    return;
+  }
+
+  // Remove from old instructor's list if reassigning
+  if (student.instructorId && student.instructorId !== instructorEmail) {
+    const oldInstructor = users.find(u => u.email === student.instructorId);
+    if (oldInstructor && oldInstructor.studentsList) {
+      oldInstructor.studentsList = oldInstructor.studentsList.filter(e => e !== studentEmail);
+    }
+  }
+
+  student.instructorId = instructorEmail;
+  if (!instructor.studentsList) instructor.studentsList = [];
+  if (!instructor.studentsList.includes(studentEmail)) {
+    instructor.studentsList.push(studentEmail);
+  }
+
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+  renderAdminUsersTable();
+  showToast(`${student.name} assigned to ${instructor.name}! ✅`);
+}
+
+function adminUnassignInstructor() {
+  const studentEmail = document.getElementById('admin-assign-student').value;
+  if (!studentEmail) { showToast('Please select a student.'); return; }
+
+  const users = loadAllUsers();
+  const student = users.find(u => u.email === studentEmail);
+  if (!student) { showToast('Student not found.'); return; }
+
+  if (!student.instructorId) {
+    showToast('This student is already unassigned.');
+    return;
+  }
+
+  // Remove from instructor's list
+  const instructor = users.find(u => u.email === student.instructorId);
+  if (instructor && instructor.studentsList) {
+    instructor.studentsList = instructor.studentsList.filter(e => e !== studentEmail);
+  }
+
+  student.instructorId = null;
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+  renderAdminUsersTable();
+  showToast(`${student.name} unassigned from instructor. ✅`);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // SESSION GUARD & ROLE-BASED UI
 // ════════════════════════════════════════════════════════════════════════════
@@ -3431,6 +3749,13 @@ function initSession() {
   if (sessionRole === 'student') {
     adminTabBtn.style.display = 'none';
   }
+
+  // Admin-only panels: user management, create user, assign instructor
+  const adminOnlyPanels = ['admin-users-panel', 'admin-create-user-panel', 'admin-assign-panel'];
+  adminOnlyPanels.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = (sessionRole === 'admin') ? '' : 'none';
+  });
 
   // Role toggle: Students can only be in student mode
   const roleToggle = document.getElementById('role-toggle-bar');
