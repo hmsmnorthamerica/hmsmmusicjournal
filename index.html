@@ -1,0 +1,3317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Practice Journal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4ff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1.app-title {
+      text-align: center;
+      color: #3a3a6e;
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+    .app-subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+
+    /* Nav tabs */
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: white;
+      border: 2px solid #c5caf5;
+      border-radius: 20px;
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #5556a8;
+      transition: all 0.2s;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: #5556a8;
+      color: white;
+      border-color: #5556a8;
+    }
+
+    /* Journal card */
+    .journal-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(85,86,168,0.12);
+      max-width: 780px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    /* Header row */
+    .journal-header {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      border-bottom: 2px solid #e0e4ff;
+    }
+    .header-cell {
+      padding: 16px;
+      border-right: 2px solid #e0e4ff;
+    }
+    .header-cell:last-child { border-right: none; }
+
+    .field-label {
+      font-size: 0.75rem;
+      color: #888;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .field-input {
+      width: 100%;
+      border: none;
+      border-bottom: 1.5px solid #c5caf5;
+      font-size: 0.95rem;
+      padding: 4px 0;
+      color: #333;
+      background: transparent;
+      outline: none;
+    }
+    .field-input:focus { border-bottom-color: #5556a8; }
+
+    /* Class Performance + Practice Log columns */
+    .perf-cell {
+      text-align: center;
+      padding: 12px 10px;
+    }
+    .section-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #3a3a6e;
+      margin-bottom: 4px;
+    }
+    .section-hint {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 10px;
+    }
+
+    /* Day circles */
+    .day-circles {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .day-circle-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .day-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #666;
+    }
+    .day-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #c5caf5;
+      background: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+    .day-circle.practiced {
+      background: #f9c74f;
+      border-color: #f3a629;
+      box-shadow: 0 2px 6px rgba(249,199,79,0.5);
+    }
+    .day-circle.practiced::after { content: '✓'; color: #7a5a00; font-weight: bold; }
+
+    /* Body sections */
+    .journal-body { padding: 0; }
+
+    .section-row {
+      border-bottom: 2px solid #e0e4ff;
+      display: grid;
+      grid-template-columns: 200px 1fr;
+    }
+    .section-label-cell {
+      background: #f7f8ff;
+      padding: 14px 16px;
+      border-right: 2px solid #e0e4ff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #3a3a6e;
+      display: flex;
+      align-items: flex-start;
+    }
+    .section-content-cell {
+      padding: 12px 16px;
+    }
+
+    /* Song lines */
+    .song-lines { display: flex; flex-direction: column; gap: 6px; }
+    .song-days-header {
+      display: flex;
+      justify-content: flex-end;
+      gap: 4px;
+      padding-right: 2px;
+      margin-bottom: 2px;
+    }
+    .song-days-header span {
+      width: 22px;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #9999cc;
+    }
+    .song-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .song-number {
+      font-size: 0.75rem;
+      color: #aaa;
+      width: 16px;
+      flex-shrink: 0;
+    }
+    .song-input {
+      flex: 1;
+      border: none;
+      border-bottom: 1.5px solid #e0e4ff;
+      font-size: 0.9rem;
+      padding: 4px 0;
+      color: #333;
+      background: transparent;
+      outline: none;
+      min-width: 0;
+    }
+    .song-input:focus { border-bottom-color: #5556a8; }
+    .song-day-circles {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .song-day-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid #d0d4f5;
+      background: white;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .song-day-dot:hover { border-color: #5556a8; background: #f0f0ff; }
+    .song-day-dot.done {
+      background: #f9c74f;
+      border-color: #f3a629;
+    }
+
+    /* Practice time table */
+    .time-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .time-table th, .time-table td {
+      text-align: center;
+      padding: 8px 6px;
+      font-size: 0.82rem;
+    }
+    .time-table th {
+      color: #5556a8;
+      font-weight: 700;
+      border-bottom: 2px solid #e0e4ff;
+    }
+    .time-input {
+      width: 60px;
+      border: 1.5px solid #e0e4ff;
+      border-radius: 6px;
+      padding: 4px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #333;
+      outline: none;
+    }
+    .time-input:focus { border-color: #5556a8; }
+
+    /* Reward section */
+    .reward-section {
+      padding: 16px;
+      border-bottom: 2px solid #e0e4ff;
+    }
+    .reward-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #3a3a6e;
+      margin-bottom: 6px;
+    }
+    .reward-hint {
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .reward-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .reward-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #c5caf5;
+      background: white;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #5556a8;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .reward-btn:hover { border-color: #5556a8; background: #f0f0ff; }
+    .reward-btn.selected {
+      background: #5556a8;
+      color: white;
+      border-color: #3a3a6e;
+      box-shadow: 0 2px 8px rgba(85,86,168,0.35);
+    }
+    .stamp-btn.selected { background: #ff6b6b; border-color: #cc2222; }
+    .coin-btn.selected { background: #f9c74f; color: #7a5a00; border-color: #f3a629; }
+    .grade-btn {
+      width: auto;
+      height: auto;
+      padding: 6px 10px;
+      border-radius: 10px;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .grade-emoji { font-size: 1.3rem; line-height: 1; }
+    .grade-label { font-size: 0.7rem; font-weight: 700; line-height: 1; }
+    .grade-btn.selected { background: #5556a8; color: white; border-color: #3a3a6e; }
+
+    /* Bottom actions */
+    .journal-footer {
+      padding: 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      background: #f7f8ff;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 22px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-secondary {
+      background: white;
+      color: #5556a8;
+      border: 2px solid #c5caf5;
+    }
+    .btn-secondary:hover { border-color: #5556a8; }
+    .btn-primary {
+      background: #5556a8;
+      color: white;
+    }
+    .btn-primary:hover { background: #3a3a6e; }
+    .btn-save {
+      background: #43aa8b;
+      color: white;
+    }
+    .btn-save:hover { background: #2d7a61; }
+    .btn-email {
+      background: #e07b39;
+      color: white;
+    }
+    .btn-email:hover { background: #b85e22; }
+
+    /* Email modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      width: 90%;
+      max-width: 460px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #3a3a6e;
+      margin-bottom: 16px;
+    }
+    .modal-field { margin-bottom: 14px; }
+    .modal-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+    .modal-input {
+      width: 100%;
+      border: 1.5px solid #d0d4f5;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+    }
+    .modal-input:focus { border-color: #5556a8; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* History tab */
+    .history-empty {
+      text-align: center;
+      color: #aaa;
+      padding: 60px 20px;
+      font-size: 1rem;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .history-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .history-card:hover { box-shadow: 0 4px 16px rgba(85,86,168,0.18); }
+    .history-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .history-date { font-weight: 700; color: #3a3a6e; }
+    .history-subject { color: #888; font-size: 0.85rem; }
+    .history-summary {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      cursor: pointer;
+    }
+    .summary-badge {
+      font-size: 0.8rem;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge-icon { font-size: 1rem; }
+    .history-expand-btn {
+      background: none;
+      border: none;
+      color: #9999cc;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 8px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .history-expand-btn:hover { background: #f0f0ff; color: #5556a8; }
+
+    /* Detail panel */
+    .history-detail {
+      display: none;
+      margin-top: 14px;
+      border-top: 1.5px solid #e0e4ff;
+      padding-top: 14px;
+    }
+    .history-detail.open { display: block; }
+    .detail-section {
+      margin-bottom: 12px;
+    }
+    .detail-section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #5556a8;
+      margin-bottom: 6px;
+    }
+    .detail-song-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      color: #333;
+    }
+    .detail-song-name {
+      flex: 1;
+      color: #444;
+    }
+    .detail-song-name.empty { color: #ccc; font-style: italic; }
+    .detail-dot-row {
+      display: flex;
+      gap: 3px;
+    }
+    .detail-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid #e0e4ff;
+      background: white;
+      font-size: 0;
+      flex-shrink: 0;
+    }
+    .detail-dot.done { background: #f9c74f; border-color: #f3a629; }
+    .detail-day-header {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 3px;
+      padding-left: calc(16px + 8px); /* num width + gap */
+    }
+    .detail-day-lbl {
+      width: 18px;
+      text-align: center;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #aab;
+    }
+    .detail-time-row {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .detail-time-cell {
+      text-align: center;
+      font-size: 0.75rem;
+    }
+    .detail-time-day { color: #888; font-weight: 600; margin-bottom: 2px; }
+    .detail-time-val {
+      background: #f0f0ff;
+      border-radius: 6px;
+      padding: 4px 2px;
+      font-weight: 700;
+      color: #5556a8;
+    }
+    .detail-time-val.zero { background: #f7f7f7; color: #ccc; font-weight: 400; }
+    .detail-rewards {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .detail-reward-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .detail-reward-icon { font-size: 1.3rem; }
+    .detail-reward-val { font-size: 1.1rem; font-weight: 700; color: #5556a8; }
+    .detail-reward-lbl { font-size: 0.7rem; color: #888; }
+    .detail-grade {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+    }
+    .detail-grade-emoji { font-size: 1.6rem; }
+    .detail-grade-val { font-weight: 700; font-size: 1.2rem; color: #3a3a6e; }
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0ff;
+    }
+
+    /* Progress tab */
+    .progress-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+    }
+    .stat-value {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #5556a8;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 4px;
+    }
+    .chart-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+    }
+    .chart-card-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #3a3a6e;
+      margin-bottom: 14px;
+    }
+    .chart-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .chart-toggle-btn {
+      padding: 5px 14px;
+      border-radius: 14px;
+      border: 1.5px solid #c5caf5;
+      background: white;
+      color: #5556a8;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .chart-toggle-btn.active {
+      background: #5556a8;
+      color: white;
+      border-color: #5556a8;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #43aa8b;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Archive toolbar */
+    .archive-toolbar {
+      max-width: 780px;
+      margin: 0 auto 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .archive-search {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: 2px solid #c5caf5;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .archive-search:focus { border-color: #5556a8; }
+    .btn-export {
+      background: #43aa8b;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-export:hover { background: #3a9a7d; }
+    .btn-danger {
+      background: #e05555;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-danger:hover { background: #c74444; }
+
+    /* Month group */
+    .archive-month-group { margin-bottom: 6px; }
+    .archive-month-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #3a3a6e;
+      background: #eef0ff;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .archive-month-badge {
+      background: #5556a8;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 9px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    /* ── Workflow: Role toggle ── */
+    .role-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      max-width: 780px;
+      margin: 0 auto 14px;
+      flex-wrap: wrap;
+    }
+    .role-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+    }
+    .role-btn {
+      padding: 8px 20px;
+      border-radius: 20px;
+      border: 2px solid #c5caf5;
+      background: white;
+      color: #5556a8;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .role-btn.active {
+      background: #5556a8;
+      color: white;
+      border-color: #5556a8;
+    }
+
+    /* ── Workflow: Disabled state ── */
+    .wf-disabled {
+      opacity: 0.3;
+      pointer-events: none !important;
+      cursor: default !important;
+    }
+    input:disabled {
+      opacity: 0.4;
+      background: #f8f8fb !important;
+      cursor: default;
+    }
+
+    /* ── Workflow: Status strip ── */
+    .workflow-status-strip {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e4ff;
+    }
+    .workflow-status-strip.visible { display: flex; }
+    .wf-status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .wf-dot-created { background: #3b82f6; }
+    .wf-dot-practice_submitted { background: #f59e0b; }
+    .wf-dot-completed { background: #22c55e; }
+    .wf-status-text { color: #3a3a6e; }
+
+    /* ── Status badges (history) ── */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-created { background: #dbeafe; color: #1d4ed8; }
+    .status-practice_submitted { background: #fef9c3; color: #854d0e; }
+    .status-completed { background: #dcfce7; color: #166534; }
+
+    /* ── Settings tab ── */
+    .settings-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .settings-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+    }
+    .settings-card-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #3a3a6e;
+      margin-bottom: 4px;
+    }
+    .settings-card-hint {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 18px;
+    }
+    .settings-field { margin-bottom: 14px; }
+    .settings-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+    .settings-input {
+      width: 100%;
+      border: 1.5px solid #c5caf5;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .settings-input:focus { border-color: #5556a8; }
+    .settings-save-btn {
+      background: #5556a8;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .settings-save-btn:hover { background: #3a3a6e; }
+
+    /* ── Workflow notification modal ── */
+    .wf-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .wf-modal-overlay.open { display: flex; }
+    .wf-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+    .wf-modal-icon { font-size: 2rem; margin-bottom: 10px; }
+    .wf-modal-title { font-weight: 700; font-size: 1.1rem; color: #3a3a6e; margin-bottom: 6px; }
+    .wf-modal-desc { font-size: 0.85rem; color: #666; margin-bottom: 18px; line-height: 1.5; }
+    .wf-modal-to {
+      font-size: 0.8rem;
+      color: #5556a8;
+      background: #f0f0ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 18px;
+      word-break: break-all;
+    }
+    .wf-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Comments / Questions textareas ── */
+    .journal-textarea {
+      width: 100%;
+      border: 1.5px solid #e0e4ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #333;
+      background: transparent;
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+    .journal-textarea:focus { border-color: #5556a8; }
+    .journal-textarea:disabled {
+      opacity: 0.45;
+      background: #f8f8fb;
+      cursor: default;
+      resize: none;
+    }
+    .ta-instructor { border-left: 3px solid #5556a8; }
+    .ta-student    { border-left: 3px solid #43aa8b; }
+    .textarea-role-hint {
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: #aaa;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    /* ── Admin leaderboard ── */
+    .leaderboard-card {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+      border: 2px solid #e0e4ff;
+    }
+    .leaderboard-card .lb-icon { font-size: 2rem; margin-bottom: 6px; }
+    .leaderboard-card .lb-category {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .leaderboard-card .lb-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #3a3a6e;
+      margin-bottom: 2px;
+    }
+    .leaderboard-card .lb-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #5556a8;
+    }
+    .leaderboard-card .lb-detail {
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* ── Admin student summary ── */
+    #admin-student-table td {
+      text-align: center;
+    }
+    #admin-student-table td:first-child,
+    #admin-student-table th:first-child {
+      text-align: left;
+    }
+    #admin-student-table td:nth-child(2),
+    #admin-student-table th:nth-child(2) {
+      text-align: left;
+    }
+    .student-summary-name {
+      font-weight: 700;
+      color: #3a3a6e;
+    }
+    .summary-badge-stamps {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #fff0f0;
+      color: #c22;
+    }
+    .summary-badge-coins {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #fff8e0;
+      color: #8a6000;
+    }
+    .summary-badge-avail {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    /* ── Admin tab ── */
+    .admin-wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .admin-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #3a3a6e;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .admin-subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #999;
+      margin-bottom: 10px;
+    }
+    .admin-instrument-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 14px rgba(85,86,168,0.10);
+      overflow: hidden;
+    }
+    .admin-instrument-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #5556a8 0%, #7b7ce0 100%);
+      color: white;
+      cursor: pointer;
+    }
+    .admin-instrument-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .admin-instrument-count {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    .admin-instrument-body {
+      display: none;
+      padding: 18px 20px;
+    }
+    .admin-instrument-body.open { display: block; }
+    .admin-totals-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .admin-total-card {
+      flex: 1;
+      min-width: 160px;
+      background: #f7f8ff;
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .admin-total-icon { font-size: 1.5rem; margin-bottom: 4px; }
+    .admin-total-earned { font-size: 0.72rem; color: #888; margin-bottom: 2px; }
+    .admin-total-available {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #5556a8;
+    }
+    .admin-total-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #888;
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .admin-redeem-btn {
+      margin-top: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .admin-redeem-stamps { background: #ffe0e0; color: #c22; }
+    .admin-redeem-stamps:hover { background: #ffc8c8; }
+    .admin-redeem-coins { background: #fff4d6; color: #8a6000; }
+    .admin-redeem-coins:hover { background: #ffe8b0; }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+    .admin-table th {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #888;
+      border-bottom: 2px solid #e0e4ff;
+    }
+    .admin-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f0f2ff;
+      color: #333;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-edit-input {
+      width: 52px;
+      border: 1.5px solid #d0d4f5;
+      border-radius: 6px;
+      padding: 4px 6px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #5556a8;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .admin-edit-input:focus { border-color: #5556a8; }
+    .admin-save-row {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding-top: 8px;
+      border-top: 1px solid #f0f0ff;
+    }
+    .admin-save-btn {
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: none;
+      background: #43aa8b;
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .admin-save-btn:hover { background: #3a9a7d; }
+    .admin-empty {
+      text-align: center;
+      color: #bbb;
+      padding: 50px 20px;
+      font-size: 0.95rem;
+    }
+    .admin-redeemed-log {
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 6px;
+    }
+
+    /* ── Saved Resources tab ── */
+    .resources-wrap {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .resource-form-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 14px rgba(85,86,168,0.10);
+    }
+    .resource-form-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #3a3a6e;
+      margin-bottom: 16px;
+    }
+    .res-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .res-field { display: flex; flex-direction: column; }
+    .res-field.full { grid-column: 1 / -1; }
+    .res-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+    .res-input, .res-select, .res-textarea {
+      width: 100%;
+      border: 1.5px solid #c5caf5;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .res-input:focus, .res-select:focus, .res-textarea:focus { border-color: #5556a8; }
+    .res-textarea { resize: vertical; min-height: 60px; }
+    .res-save-btn {
+      margin-top: 6px;
+      padding: 10px 24px;
+      border-radius: 20px;
+      border: none;
+      background: #5556a8;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .res-save-btn:hover { background: #3a3a6e; }
+
+    .res-search-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .res-search-input {
+      flex: 1;
+      min-width: 180px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: 2px solid #c5caf5;
+      font-size: 0.9rem;
+      color: #333;
+      outline: none;
+    }
+    .res-search-input:focus { border-color: #5556a8; }
+    .res-filter-select {
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: 2px solid #c5caf5;
+      font-size: 0.85rem;
+      color: #5556a8;
+      font-weight: 600;
+      background: white;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .res-list { display: flex; flex-direction: column; gap: 10px; }
+    .res-entry {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+      transition: box-shadow 0.2s;
+    }
+    .res-entry:hover { box-shadow: 0 4px 16px rgba(85,86,168,0.18); }
+    .res-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .res-entry-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #3a3a6e;
+    }
+    .res-category-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: #eef0ff;
+      color: #5556a8;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .res-entry-url a {
+      color: #5556a8;
+      text-decoration: none;
+      font-size: 0.82rem;
+      word-break: break-all;
+    }
+    .res-entry-url a:hover { text-decoration: underline; }
+    .res-entry-notes {
+      color: #777;
+      font-size: 0.85rem;
+      margin-top: 6px;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .res-entry-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .res-entry-date {
+      color: #bbb;
+      font-size: 0.72rem;
+    }
+    .res-delete-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #ffe0e0;
+      color: #c22;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .res-delete-btn:hover { background: #ffc8c8; }
+    .res-empty {
+      text-align: center;
+      color: #bbb;
+      padding: 50px 20px;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 600px) {
+      .journal-header { grid-template-columns: 1fr; }
+      .header-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
+      .section-row { grid-template-columns: 1fr; }
+      .section-label-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
+      .res-form-row { grid-template-columns: 1fr; }
+      .res-entry-header { flex-direction: column; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<h1 class="app-title">🎵 Music Practice Journal</h1>
+<p class="app-subtitle">Track your weekly practice and earn stamps & coins!</p>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('journal')">📝 This Week</button>
+  <button class="tab-btn" onclick="showTab('history')">📚 History</button>
+  <button class="tab-btn" onclick="showTab('stats')">📈 My Progress Track</button>
+  <button class="tab-btn" onclick="showTab('resources')">📌 Saved Resources</button>
+  <button class="tab-btn" onclick="showTab('admin')">🔑 Admin</button>
+  <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
+</div>
+
+<!-- JOURNAL TAB -->
+<div id="tab-journal">
+  <!-- Role toggle -->
+  <div class="role-toggle">
+    <span class="role-label">View as:</span>
+    <button class="role-btn active" id="role-instructor" onclick="setRole('instructor')">👩‍🏫 Instructor</button>
+    <button class="role-btn" id="role-student" onclick="setRole('student')">🎵 Student</button>
+  </div>
+  <div class="journal-card">
+    <!-- Workflow status strip -->
+    <div class="workflow-status-strip" id="wf-status-strip">
+      <div class="wf-status-dot" id="wf-status-dot"></div>
+      <span class="wf-status-text" id="wf-status-text"></span>
+    </div>
+
+    <!-- Header -->
+    <div class="journal-header">
+      <div class="header-cell">
+        <div class="field-label">Date</div>
+        <input class="field-input" id="inp-date" type="date" />
+        <div class="field-label" style="margin-top:12px;">Subject / Instrument</div>
+        <input class="field-input" id="inp-subject" type="text" placeholder="e.g. Piano" />
+        <div class="field-label" style="margin-top:12px;">Student Name</div>
+        <input class="field-input" id="inp-student-name" type="text" placeholder="e.g. Emily Smith" />
+        <div class="field-label" style="margin-top:12px;">Instructor Name</div>
+        <input class="field-input" id="inp-instructor" type="text" placeholder="e.g. Ms. Johnson" />
+      </div>
+      <div class="header-cell perf-cell">
+        <div class="section-title">Class Performance</div>
+        <div class="section-hint">How did you do in class today?</div>
+        <div class="reward-options" style="justify-content:center;" id="class-perf-stars">
+          <!-- filled by JS -->
+        </div>
+      </div>
+      <div class="header-cell perf-cell">
+        <div class="section-title">Practice Log</div>
+        <div class="section-hint">Click a circle after each practice</div>
+        <div class="day-circles" id="day-circles">
+          <!-- filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="journal-body">
+
+      <!-- Review Song List -->
+      <div class="section-row">
+        <div class="section-label-cell">Review Song List</div>
+        <div class="section-content-cell">
+          <div class="song-lines" id="review-songs">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Priority -->
+      <div class="section-row">
+        <div class="section-label-cell">Top Priority to Practice</div>
+        <div class="section-content-cell">
+          <div class="song-lines" id="priority-songs">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Other Exercises -->
+      <div class="section-row">
+        <div class="section-label-cell">Other Exercises / Songs</div>
+        <div class="section-content-cell">
+          <div class="song-lines" id="other-songs">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Practice Time -->
+      <div class="section-row" style="display:block; border-bottom: 2px solid #e0e4ff;">
+        <div class="section-label-cell" style="border-right:none; border-bottom: 1px solid #e0e4ff;">
+          Practice Time Record
+        </div>
+        <div class="section-content-cell">
+          <table class="time-table">
+            <thead>
+              <tr>
+                <th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="time-row">
+                <!-- filled by JS -->
+              </tr>
+            </tbody>
+          </table>
+          <div style="font-size:0.75rem; color:#aaa; margin-top:6px;">Enter minutes practiced per day</div>
+        </div>
+      </div>
+
+      <!-- Student Questions -->
+      <div class="section-row">
+        <div class="section-label-cell" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span>🎵 Student Questions</span>
+          <span class="textarea-role-hint">Student fills this section</span>
+        </div>
+        <div class="section-content-cell">
+          <textarea id="student-questions" class="journal-textarea ta-student"
+            placeholder="Any questions for your instructor? Write them here…" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Stamps -->
+      <div class="reward-section">
+        <div class="reward-title">⭐ How Many Music Stamps from Class Performance?</div>
+        <div class="reward-hint">Please circle the number (1–6)</div>
+        <div class="reward-options" id="stamps">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Coins -->
+      <div class="reward-section">
+        <div class="reward-title">🪙 How Many Practice Coins from This Week?</div>
+        <div class="reward-hint">Please circle the number (1–6)</div>
+        <div class="reward-options" id="coins">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- Instructor Feedback -->
+      <div class="section-row" style="border-bottom:none;">
+        <div class="section-label-cell" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span>👩‍🏫 Instructor Feedback</span>
+          <span class="textarea-role-hint">Instructor fills this section</span>
+        </div>
+        <div class="section-content-cell">
+          <textarea id="instructor-comments" class="journal-textarea ta-instructor"
+            placeholder="Leave your feedback, encouragement, or notes for the student here…" rows="3"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer (rendered dynamically) -->
+    <div class="journal-footer" id="journal-footer">
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div id="tab-history" style="display:none;">
+  <div class="archive-toolbar">
+    <input class="archive-search" id="archive-search" type="search"
+      placeholder="🔍 Search by date, instrument…" oninput="renderHistory()" />
+    <button class="btn-export" onclick="exportArchive()">⬇️ Export CSV</button>
+  </div>
+  <div class="history-list" id="history-list">
+    <div class="history-empty">No saved entries yet.<br>Complete a week and click "Save Week"!</div>
+  </div>
+</div>
+
+<!-- PROGRESS TAB -->
+<div id="tab-stats" style="display:none;">
+  <div class="progress-wrap">
+    <!-- Summary cards -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Top Performers This Month (student view) -->
+    <div class="chart-card" id="stats-top-performers" style="display:none;">
+      <div class="chart-card-title">🏆 Top Performers This Month</div>
+      <div id="stats-lb-date" style="font-size:0.78rem;color:#999;margin-bottom:12px;"></div>
+      <div class="admin-totals-row" id="stats-lb-cards"></div>
+    </div>
+
+    <!-- View toggle -->
+    <div class="chart-card">
+      <div class="chart-card-title">📅 View by</div>
+      <div class="chart-toggle">
+        <button class="chart-toggle-btn active" id="toggle-month" onclick="setChartView('month')">This Month</button>
+        <button class="chart-toggle-btn" id="toggle-year" onclick="setChartView('year')">This Year</button>
+        <button class="chart-toggle-btn" id="toggle-all" onclick="setChartView('all')">All Time</button>
+      </div>
+    </div>
+
+    <!-- Practice Time chart -->
+    <div class="chart-card">
+      <div class="chart-card-title">⏱ Practice Time (minutes)</div>
+      <canvas id="chart-time" height="120"></canvas>
+    </div>
+
+    <!-- Stamps & Coins chart -->
+    <div class="chart-card">
+      <div class="chart-card-title">⭐ Stamps &amp; 🪙 Coins Earned</div>
+      <canvas id="chart-rewards" height="120"></canvas>
+    </div>
+
+    <!-- Class Performance chart -->
+    <div class="chart-card">
+      <div class="chart-card-title">🎓 Class Performance Grade</div>
+      <canvas id="chart-grade" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- SAVED RESOURCES TAB -->
+<div id="tab-resources" style="display:none;">
+  <div class="resources-wrap">
+    <div class="resource-form-card">
+      <h3>📌 Save a Music Resource</h3>
+      <div class="res-form-row">
+        <div class="res-field">
+          <label class="res-label">Title *</label>
+          <input class="res-input" id="res-title" type="text" placeholder="e.g. Fur Elise Tutorial" />
+        </div>
+        <div class="res-field">
+          <label class="res-label">Category</label>
+          <select class="res-select" id="res-category">
+            <option value="Tutorial">Tutorial</option>
+            <option value="Sheet Music">Sheet Music</option>
+            <option value="Practice Video">Practice Video</option>
+            <option value="Theory">Theory</option>
+            <option value="Performance">Performance</option>
+            <option value="Warm-up">Warm-up</option>
+            <option value="Technique">Technique</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="res-form-row">
+        <div class="res-field full">
+          <label class="res-label">URL *</label>
+          <input class="res-input" id="res-url" type="url" placeholder="https://youtube.com/..." />
+        </div>
+      </div>
+      <div class="res-form-row">
+        <div class="res-field full">
+          <label class="res-label">Notes (optional)</label>
+          <textarea class="res-textarea" id="res-notes" placeholder="Any thoughts, tips, or reminders..." rows="3"></textarea>
+        </div>
+      </div>
+      <button class="res-save-btn" onclick="saveResource()">💾 Save Resource</button>
+    </div>
+
+    <div class="resource-form-card">
+      <h3>📚 My Saved Resources</h3>
+      <div class="res-search-bar" style="margin-bottom:14px;">
+        <input class="res-search-input" id="res-search" type="search" placeholder="🔍 Search resources..." oninput="renderResources()" />
+        <select class="res-filter-select" id="res-filter" onchange="renderResources()">
+          <option value="">All Categories</option>
+          <option value="Tutorial">Tutorial</option>
+          <option value="Sheet Music">Sheet Music</option>
+          <option value="Practice Video">Practice Video</option>
+          <option value="Theory">Theory</option>
+          <option value="Performance">Performance</option>
+          <option value="Warm-up">Warm-up</option>
+          <option value="Technique">Technique</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="res-list" id="res-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN TAB -->
+<div id="tab-admin" style="display:none;">
+  <div class="admin-wrap">
+    <div class="admin-title">🔑 Administrator Dashboard</div>
+    <div class="admin-subtitle">View all entries by instrument — manage stamps &amp; coins</div>
+
+    <!-- Top Performers -->
+    <div id="admin-leaderboard" style="display:none;">
+      <div class="resource-form-card" style="margin-bottom:16px;">
+        <h3>🏆 Top Performers</h3>
+        <div class="chart-toggle" style="margin-bottom:14px;">
+          <button class="chart-toggle-btn active" id="lb-week" onclick="setLeaderboardInterval('week')">This Week</button>
+          <button class="chart-toggle-btn" id="lb-month" onclick="setLeaderboardInterval('month')">This Month</button>
+          <button class="chart-toggle-btn" id="lb-all" onclick="setLeaderboardInterval('all')">All Time</button>
+        </div>
+        <div id="lb-date-range" style="font-size:0.78rem;color:#999;margin-bottom:12px;"></div>
+        <div class="admin-totals-row" id="admin-top-performers"></div>
+      </div>
+    </div>
+
+    <!-- Student Summary Section -->
+    <div class="resource-form-card" id="admin-student-summary" style="display:none;">
+      <h3>👤 Student Summary — Stamps &amp; Practice Coins</h3>
+      <div class="table-wrap" style="overflow-x:auto;">
+        <table class="admin-table" id="admin-student-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Instrument</th>
+              <th>⭐ Stamps Earned</th>
+              <th>⭐ Stamps Redeemed</th>
+              <th>⭐ Stamps Available</th>
+              <th>🪙 Coins Earned</th>
+              <th>🪙 Coins Redeemed</th>
+              <th>🪙 Coins Available</th>
+            </tr>
+          </thead>
+          <tbody id="admin-student-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="admin-content"></div>
+  </div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-title">✉️ Send Practice Journal</div>
+    <div class="modal-field">
+      <div class="modal-label">Recipient Email</div>
+      <input class="modal-input" id="email-to" type="email" placeholder="parent@example.com or teacher@school.com" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Your Name (optional)</div>
+      <input class="modal-input" id="email-from-name" type="text" placeholder="e.g. Ms. Johnson" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEmailModal()">Cancel</button>
+      <button class="btn btn-email" onclick="sendEmail()">Open in Email App</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS TAB -->
+<div id="tab-settings" style="display:none;">
+  <div class="settings-wrap">
+    <div class="settings-card">
+      <div class="settings-card-title">📧 Email Contacts</div>
+      <div class="settings-card-hint">These addresses are used for workflow notifications at each journal step.</div>
+      <div class="settings-field">
+        <div class="settings-label">Instructor Email</div>
+        <input class="settings-input" id="set-instructor-email" type="email" placeholder="instructor@school.com" />
+      </div>
+      <div class="settings-field">
+        <div class="settings-label">Parent Email</div>
+        <input class="settings-input" id="set-parent-email" type="email" placeholder="parent@example.com" />
+      </div>
+      <div class="settings-field">
+        <div class="settings-label">Student Email (optional)</div>
+        <input class="settings-input" id="set-student-email" type="email" placeholder="student@example.com" />
+      </div>
+      <button class="settings-save-btn" onclick="saveSettingsForm()">💾 Save Settings</button>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title">📋 Workflow Guide</div>
+      <div class="settings-card-hint" style="margin-bottom:0;">
+        <b>Step 1 — Instructor:</b> Fill in date, instrument, song list, then click <em>Save &amp; Notify</em>. Parent and student get an email that the journal is ready.<br><br>
+        <b>Step 2 — Student:</b> Switch to Student mode, fill in practice circles and practice time, then click <em>Submit My Practice</em>. Instructor gets notified.<br><br>
+        <b>Step 3 — Instructor:</b> Switch back to Instructor mode, add music stamps and coins, then click <em>Complete &amp; Notify</em>. Parent and student get a final summary email.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Workflow notification modal -->
+<div class="wf-modal-overlay" id="wf-notify-modal">
+  <div class="wf-modal">
+    <div class="wf-modal-icon" id="wf-modal-icon"></div>
+    <div class="wf-modal-title" id="wf-modal-title"></div>
+    <div class="wf-modal-desc" id="wf-modal-desc"></div>
+    <div class="wf-modal-to" id="wf-modal-to"></div>
+    <div class="wf-modal-actions">
+      <button class="btn btn-secondary" onclick="closeWfModal()">Skip</button>
+      <button class="btn btn-email" onclick="sendWfEmail()">✉️ Open Email App</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_SHORT = ['M','T','W','T','F','S','S'];
+
+let state = {
+  date: '',
+  subject: '',
+  studentName: '',
+  instructor: '',
+  status: null,   // null | 'created' | 'practice_submitted' | 'completed'
+  classPerfStars: 0,
+  practicedDays: [],
+  reviewSongs: ['','','','',''],
+  reviewSongDays: [[],[],[],[],[]],
+  prioritySongs: ['','',''],
+  prioritySongDays: [[],[],[]],
+  otherSongs: ['','',''],
+  otherSongDays: [[],[],[]],
+  practiceTime: { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 },
+  stamps: 0,
+  coins: 0,
+  instructorComments: '',
+  studentQuestions: '',
+};
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-date').value = today;
+  state.date = today;
+
+  buildDayCircles();
+  buildClassPerfStars();
+  buildSongLines('review-songs', 'reviewSongs', 5, 'reviewSongDays');
+  buildSongLines('priority-songs', 'prioritySongs', 3, 'prioritySongDays');
+  buildSongLines('other-songs', 'otherSongs', 3, 'otherSongDays');
+  buildTimeRow();
+  buildRewardBtns('stamps', 6, 'stamps', 'stamp-btn');
+  buildRewardBtns('coins', 6, 'coins', 'coin-btn');
+  renderHistory();
+  renderStats();
+
+  document.getElementById('inp-date').addEventListener('change', e => state.date = e.target.value);
+  document.getElementById('inp-subject').addEventListener('input', e => state.subject = e.target.value);
+  document.getElementById('inp-student-name').addEventListener('input', e => state.studentName = e.target.value);
+  document.getElementById('inp-instructor').addEventListener('input', e => state.instructor = e.target.value);
+  document.getElementById('instructor-comments').addEventListener('input', e => { state.instructorComments = e.target.value; });
+  document.getElementById('student-questions').addEventListener('input', e => { state.studentQuestions = e.target.value; });
+
+  // Init workflow UI
+  loadSettingsIntoForm();
+  renderFooterButtons();
+  applyRoleToForm();
+
+  // Button delegation in history list (edit + delete)
+  document.getElementById('history-list').addEventListener('click', e => {
+    const editBtn = e.target.closest('[data-entry-idx]');
+    if (editBtn) {
+      e.stopPropagation();
+      const idx = parseInt(editBtn.dataset.entryIdx);
+      const history = loadHistory();
+      if (history[idx]) loadEntry(history[idx]);
+      return;
+    }
+    const delBtn = e.target.closest('[data-delete-idx]');
+    if (delBtn) {
+      e.stopPropagation();
+      deleteEntry(parseInt(delBtn.dataset.deleteIdx));
+    }
+  });
+});
+
+function buildDayCircles() {
+  const container = document.getElementById('day-circles');
+  container.innerHTML = '';
+  DAYS.forEach((day, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'day-circle-wrap';
+    const label = document.createElement('div');
+    label.className = 'day-label';
+    label.textContent = DAY_SHORT[i];
+    const circle = document.createElement('div');
+    circle.className = 'day-circle';
+    circle.id = `dc-${i}`;
+    circle.title = `Toggle ${day}`;
+    circle.onclick = () => toggleDay(i);
+    wrap.appendChild(label);
+    wrap.appendChild(circle);
+    container.appendChild(wrap);
+  });
+}
+
+const CLASS_GRADES = [
+  { grade: 'D',  emoji: '😔' },
+  { grade: 'C',  emoji: '😐' },
+  { grade: 'B',  emoji: '🙂' },
+  { grade: 'A',  emoji: '😄' },
+  { grade: 'A+', emoji: '🌟' },
+];
+
+function buildClassPerfStars() {
+  const container = document.getElementById('class-perf-stars');
+  container.innerHTML = '';
+  CLASS_GRADES.forEach(({ grade, emoji }, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'reward-btn grade-btn';
+    btn.id = `cp-${i+1}`;
+    btn.title = grade;
+    btn.innerHTML = `<span class="grade-emoji">${emoji}</span><span class="grade-label">${grade}</span>`;
+    btn.onclick = () => selectClassPerf(i + 1);
+    container.appendChild(btn);
+  });
+}
+
+function buildSongLines(containerId, stateKey, count, daysKey) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  // Day-letter header aligned over circles
+  const header = document.createElement('div');
+  header.className = 'song-days-header';
+  // spacer for number + input
+  const spacer = document.createElement('div');
+  spacer.style.flex = '1';
+  header.appendChild(spacer);
+  const circlesHeader = document.createElement('div');
+  circlesHeader.style.display = 'flex';
+  circlesHeader.style.gap = '4px';
+  DAY_SHORT.forEach(d => {
+    const s = document.createElement('span');
+    s.style.width = '22px';
+    s.style.textAlign = 'center';
+    s.style.fontSize = '0.65rem';
+    s.style.fontWeight = '700';
+    s.style.color = '#9999cc';
+    s.textContent = d;
+    circlesHeader.appendChild(s);
+  });
+  header.appendChild(circlesHeader);
+  container.appendChild(header);
+
+  for (let i = 0; i < count; i++) {
+    const line = document.createElement('div');
+    line.className = 'song-line';
+
+    const num = document.createElement('span');
+    num.className = 'song-number';
+    num.textContent = `${i+1}.`;
+
+    const inp = document.createElement('input');
+    inp.className = 'song-input';
+    inp.type = 'text';
+    inp.placeholder = 'Song or exercise name...';
+    inp.value = state[stateKey][i] || '';
+    inp.addEventListener('input', e => { state[stateKey][i] = e.target.value; });
+
+    const dotsWrap = document.createElement('div');
+    dotsWrap.className = 'song-day-circles';
+
+    DAYS.forEach((day, d) => {
+      const dot = document.createElement('div');
+      dot.className = 'song-day-dot';
+      dot.title = day;
+      if ((state[daysKey][i] || []).includes(d)) dot.classList.add('done');
+      dot.onclick = () => toggleSongDay(daysKey, i, d, dot);
+      dotsWrap.appendChild(dot);
+    });
+
+    line.appendChild(num);
+    line.appendChild(inp);
+    line.appendChild(dotsWrap);
+    container.appendChild(line);
+  }
+}
+
+function toggleSongDay(daysKey, songIdx, dayIdx, dotEl) {
+  if (!state[daysKey][songIdx]) state[daysKey][songIdx] = [];
+  const arr = state[daysKey][songIdx];
+  const pos = arr.indexOf(dayIdx);
+  if (pos === -1) arr.push(dayIdx);
+  else arr.splice(pos, 1);
+  dotEl.classList.toggle('done', arr.includes(dayIdx));
+}
+
+function buildTimeRow() {
+  const row = document.getElementById('time-row');
+  row.innerHTML = '';
+  DAYS.forEach(day => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.className = 'time-input';
+    inp.type = 'number';
+    inp.min = 0;
+    inp.max = 240;
+    inp.placeholder = '0';
+    inp.value = state.practiceTime[day] || '';
+    inp.addEventListener('input', e => {
+      state.practiceTime[day] = parseInt(e.target.value) || 0;
+    });
+    td.appendChild(inp);
+    row.appendChild(td);
+  });
+}
+
+function buildRewardBtns(containerId, count, stateKey, extraClass) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (let i = 1; i <= count; i++) {
+    const btn = document.createElement('button');
+    btn.className = `reward-btn ${extraClass}`;
+    btn.textContent = i;
+    btn.id = `${stateKey}-${i}`;
+    btn.onclick = () => selectReward(stateKey, i, extraClass);
+    container.appendChild(btn);
+  }
+}
+
+// ─── Interactions ─────────────────────────────────────────────────────────────
+function toggleDay(idx) {
+  const i = state.practicedDays.indexOf(idx);
+  if (i === -1) state.practicedDays.push(idx);
+  else state.practicedDays.splice(i, 1);
+  DAYS.forEach((_, j) => {
+    document.getElementById(`dc-${j}`).classList.toggle('practiced', state.practicedDays.includes(j));
+  });
+}
+
+function selectClassPerf(val) {
+  state.classPerfStars = val;
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById(`cp-${i}`).classList.toggle('selected', i === val);
+  }
+}
+
+function selectReward(stateKey, val, extraClass) {
+  state[stateKey] = val;
+  const container = document.getElementById(stateKey);
+  container.querySelectorAll('.reward-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i + 1 === val);
+  });
+}
+
+// ─── Save / Clear ─────────────────────────────────────────────────────────────
+function saveEntry() {
+  const entry = JSON.parse(JSON.stringify(state));
+  entry.savedAt = Date.now();
+
+  const history = loadHistory();
+  // Replace if same date
+  const idx = history.findIndex(e => e.date === entry.date);
+  if (idx !== -1) history[idx] = entry;
+  else history.unshift(entry);
+  localStorage.setItem('musicJournalHistory', JSON.stringify(history));
+
+  showToast('Week saved! 🎉');
+  renderHistory();
+  renderStats();
+}
+
+function clearForm() {
+  state = {
+    date: document.getElementById('inp-date').value,
+    subject: '',
+    studentName: '',
+    instructor: '',
+    status: null,
+    classPerfStars: 0,
+    practicedDays: [],
+    reviewSongs: ['','','','',''],
+    reviewSongDays: [[],[],[],[],[]],
+    prioritySongs: ['','',''],
+    prioritySongDays: [[],[],[]],
+    otherSongs: ['','',''],
+    otherSongDays: [[],[],[]],
+    practiceTime: { Mon:0, Tue:0, Wed:0, Thu:0, Fri:0, Sat:0, Sun:0 },
+    stamps: 0,
+    coins: 0,
+    instructorComments: '',
+    studentQuestions: '',
+  };
+  document.getElementById('inp-subject').value = '';
+  document.getElementById('inp-student-name').value = '';
+  document.getElementById('inp-instructor').value = '';
+  document.getElementById('instructor-comments').value = '';
+  document.getElementById('student-questions').value = '';
+  buildDayCircles();
+  buildClassPerfStars();
+  buildSongLines('review-songs', 'reviewSongs', 5, 'reviewSongDays');
+  buildSongLines('priority-songs', 'prioritySongs', 3, 'prioritySongDays');
+  buildSongLines('other-songs', 'otherSongs', 3, 'otherSongDays');
+  buildTimeRow();
+  buildRewardBtns('stamps', 6, 'stamps', 'stamp-btn');
+  buildRewardBtns('coins', 6, 'coins', 'coin-btn');
+  applyRoleToForm();
+}
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem('musicJournalHistory')) || []; }
+  catch { return []; }
+}
+
+// ─── History tab ──────────────────────────────────────────────────────────────
+function renderHistory() {
+  const allHistory = loadHistory();
+  const container = document.getElementById('history-list');
+  const searchEl = document.getElementById('archive-search');
+  const query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  // Filter preserving original indices
+  let filtered = allHistory.map((entry, origIdx) => ({ entry, origIdx }));
+  if (query) {
+    filtered = filtered.filter(({ entry }) =>
+      (entry.date || '').includes(query) ||
+      (entry.subject || '').toLowerCase().includes(query) ||
+      formatDate(entry.date).toLowerCase().includes(query)
+    );
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = query
+      ? `<div class="history-empty">No entries match "<strong>${query}</strong>".</div>`
+      : '<div class="history-empty">No saved entries yet.<br>Complete a week and click "Save Week"!</div>';
+    return;
+  }
+
+  // Group by Month Year, preserving display order
+  const groups = {};
+  const groupOrder = [];
+  filtered.forEach(({ entry, origIdx }) => {
+    const d = new Date((entry.date || '2000-01-01') + 'T00:00:00');
+    const key = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push({ entry, origIdx });
+  });
+
+  container.innerHTML = '';
+  let cardCounter = 0;
+  groupOrder.forEach(monthYear => {
+    const items = groups[monthYear];
+    const groupEl = document.createElement('div');
+    groupEl.className = 'archive-month-group';
+
+    const groupHeader = document.createElement('div');
+    groupHeader.className = 'archive-month-header';
+    groupHeader.innerHTML = `📅 ${monthYear}
+      <span class="archive-month-badge">${items.length} entr${items.length !== 1 ? 'ies' : 'y'}</span>`;
+    groupEl.appendChild(groupHeader);
+
+    items.forEach(({ entry, origIdx }) => {
+      groupEl.appendChild(buildHistoryCard(entry, origIdx, cardCounter++));
+    });
+    container.appendChild(groupEl);
+  });
+}
+
+function buildHistoryCard(entry, origIdx, cardId) {
+  const card = document.createElement('div');
+  card.className = 'history-card';
+  const totalMins = Object.values(entry.practiceTime || {}).reduce((a,b) => a + (b||0), 0);
+  const practicedCount = (entry.practicedDays || []).length;
+  const grade = entry.classPerfStars ? CLASS_GRADES[entry.classPerfStars - 1] : null;
+
+  // ── Summary header ──
+  const header = document.createElement('div');
+  header.innerHTML = `
+    <div class="history-card-header">
+      <div>
+        <div class="history-date">${formatDate(entry.date)}</div>
+        ${entry.studentName ? `<div class="history-subject" style="font-weight:600;color:#3a3a6e;">👤 ${entry.studentName}</div>` : ''}
+        ${entry.subject ? `<div class="history-subject">${entry.subject}</div>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${entry.status ? `<span class="status-badge status-${entry.status}">${
+          entry.status === 'created' ? '📬 Awaiting Student' :
+          entry.status === 'practice_submitted' ? '📝 Needs Review' :
+          entry.status === 'completed' ? '✅ Complete' : ''
+        }</span>` : ''}
+        <button class="history-expand-btn" id="expand-btn-${cardId}">▼ Details</button>
+      </div>
+    </div>
+    <div class="history-summary">
+      <div class="summary-badge"><span class="badge-icon">📅</span>${practicedCount} day${practicedCount !== 1 ? 's' : ''} practiced</div>
+      <div class="summary-badge"><span class="badge-icon">⏱</span>${totalMins} min total</div>
+      ${grade ? `<div class="summary-badge"><span class="badge-icon">${grade.emoji}</span>${grade.grade}</div>` : ''}
+      <div class="summary-badge"><span class="badge-icon">⭐</span>${entry.stamps || 0} stamps</div>
+      <div class="summary-badge"><span class="badge-icon">🪙</span>${entry.coins || 0} coins</div>
+    </div>
+  `;
+  card.appendChild(header);
+
+  // ── Detail panel ──
+  const detail = document.createElement('div');
+  detail.className = 'history-detail';
+  detail.id = `detail-${cardId}`;
+
+  const buildSongSection = (title, songs, songDays) => {
+    const filled = songs.filter(s => s);
+    if (!filled.length) return '';
+    let html = `<div class="detail-section">
+      <div class="detail-section-title">${title}</div>
+      <div class="detail-day-header">
+        ${DAY_SHORT.map(d => `<div class="detail-day-lbl">${d}</div>`).join('')}
+      </div>`;
+    songs.forEach((s, i) => {
+      const days = songDays?.[i] || [];
+      html += `<div class="detail-song-row">
+        <span style="color:#aaa;font-size:0.75rem;width:16px;flex-shrink:0">${i+1}.</span>
+        <span class="detail-song-name${s ? '' : ' empty'}">${s || 'not filled'}</span>
+        <div class="detail-dot-row">${DAYS.map((_,d) =>
+          `<div class="detail-dot${days.includes(d) ? ' done' : ''}" title="${DAYS[d]}"></div>`
+        ).join('')}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    return html;
+  };
+
+  const pt = entry.practiceTime || {};
+  const timeHtml = `<div class="detail-section">
+    <div class="detail-section-title">Practice Time (minutes)</div>
+    <div class="detail-time-row">${DAYS.map(day => {
+      const v = pt[day] || 0;
+      return `<div class="detail-time-cell">
+        <div class="detail-time-day">${day.slice(0,3)}</div>
+        <div class="detail-time-val${v === 0 ? ' zero' : ''}">${v}</div>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+
+  const gradeInfo = entry.classPerfStars ? CLASS_GRADES[entry.classPerfStars - 1] : null;
+  const rewardsHtml = `<div class="detail-section">
+    <div class="detail-section-title">Performance &amp; Rewards</div>
+    <div class="detail-rewards">
+      ${gradeInfo ? `<div class="detail-reward-item">
+        <div class="detail-grade-emoji">${gradeInfo.emoji}</div>
+        <div class="detail-reward-val">${gradeInfo.grade}</div>
+        <div class="detail-reward-lbl">Class Grade</div>
+      </div>` : ''}
+      <div class="detail-reward-item">
+        <div class="detail-reward-icon">⭐</div>
+        <div class="detail-reward-val">${entry.stamps || 0}<span style="font-size:0.7rem;color:#aaa">/6</span></div>
+        <div class="detail-reward-lbl">Stamps</div>
+      </div>
+      <div class="detail-reward-item">
+        <div class="detail-reward-icon">🪙</div>
+        <div class="detail-reward-val">${entry.coins || 0}<span style="font-size:0.7rem;color:#aaa">/6</span></div>
+        <div class="detail-reward-lbl">Coins</div>
+      </div>
+    </div>
+  </div>`;
+
+  const commentsHtml = (entry.instructorComments || entry.studentQuestions) ? `
+    <div class="detail-section">
+      <div class="detail-section-title">💬 Comments &amp; Questions</div>
+      ${entry.studentQuestions ? `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.72rem;font-weight:700;color:#43aa8b;margin-bottom:4px;">🎵 Student Questions</div>
+          <div style="font-size:0.85rem;color:#333;background:#f0faf6;padding:9px 12px;border-radius:8px;border-left:3px solid #43aa8b;white-space:pre-wrap;line-height:1.5;">${entry.studentQuestions.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>` : ''}
+      ${entry.instructorComments ? `
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;color:#5556a8;margin-bottom:4px;">👩‍🏫 Instructor Feedback</div>
+          <div style="font-size:0.85rem;color:#333;background:#f7f8ff;padding:9px 12px;border-radius:8px;border-left:3px solid #5556a8;white-space:pre-wrap;line-height:1.5;">${entry.instructorComments.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+        </div>` : ''}
+    </div>` : '';
+
+  detail.innerHTML =
+    buildSongSection('Review Song List', entry.reviewSongs || [], entry.reviewSongDays || []) +
+    buildSongSection('Top Priority to Practice', entry.prioritySongs || [], entry.prioritySongDays || []) +
+    buildSongSection('Other Exercises / Songs', entry.otherSongs || [], entry.otherSongDays || []) +
+    timeHtml + rewardsHtml + commentsHtml +
+    `<div class="detail-actions">
+      <button class="btn btn-primary" style="font-size:0.8rem;padding:7px 16px;" data-entry-idx="${origIdx}">✏️ Edit in Journal</button>
+      <button class="btn btn-danger" style="font-size:0.8rem;padding:7px 16px;" data-delete-idx="${origIdx}">🗑 Delete</button>
+    </div>`;
+
+  card.appendChild(detail);
+
+  // Toggle expand
+  const toggle = (e) => {
+    e.stopPropagation();
+    const isOpen = detail.classList.toggle('open');
+    document.getElementById(`expand-btn-${cardId}`).textContent = isOpen ? '▲ Hide' : '▼ Details';
+  };
+  header.querySelector('.history-card-header').addEventListener('click', toggle);
+  header.querySelector('.history-summary').addEventListener('click', toggle);
+  header.querySelector(`#expand-btn-${cardId}`).addEventListener('click', toggle);
+
+  return card;
+}
+
+function loadEntry(entry) {
+  state = JSON.parse(JSON.stringify(entry));
+  document.getElementById('inp-date').value = state.date;
+  document.getElementById('inp-subject').value = state.subject;
+  document.getElementById('inp-student-name').value = state.studentName || '';
+  document.getElementById('inp-instructor').value = state.instructor || '';
+  document.getElementById('instructor-comments').value = state.instructorComments || '';
+  document.getElementById('student-questions').value = state.studentQuestions || '';
+  // Ensure loaded entries have songDays arrays
+  if (!state.reviewSongDays) state.reviewSongDays = [[],[],[],[],[]];
+  if (!state.prioritySongDays) state.prioritySongDays = [[],[],[]];
+  if (!state.otherSongDays) state.otherSongDays = [[],[],[]];
+  buildDayCircles();
+  state.practicedDays.forEach(i => document.getElementById(`dc-${i}`).classList.add('practiced'));
+  buildClassPerfStars();
+  if (state.classPerfStars) selectClassPerf(state.classPerfStars);
+  buildSongLines('review-songs', 'reviewSongs', 5, 'reviewSongDays');
+  buildSongLines('priority-songs', 'prioritySongs', 3, 'prioritySongDays');
+  buildSongLines('other-songs', 'otherSongs', 3, 'otherSongDays');
+  buildTimeRow();
+  buildRewardBtns('stamps', 6, 'stamps', 'stamp-btn');
+  if (state.stamps) selectReward('stamps', state.stamps, 'stamp-btn');
+  buildRewardBtns('coins', 6, 'coins', 'coin-btn');
+  if (state.coins) selectReward('coins', state.coins, 'coin-btn');
+  applyRoleToForm();
+  showTab('journal');
+  showToast('Entry loaded!');
+}
+
+// ─── Progress Track ───────────────────────────────────────────────────────────
+let chartView = 'month';
+let chartInstances = {};
+
+// ─── Role & Workflow ──────────────────────────────────────────────────────────
+let role = 'instructor';
+let pendingWfEmailFn = null; // holds the mailto fn for the wf modal
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem('musicJournalSettings')) || {}; }
+  catch { return {}; }
+}
+function saveSettings(data) {
+  localStorage.setItem('musicJournalSettings', JSON.stringify(data));
+}
+function saveSettingsForm() {
+  const data = {
+    instructorEmail: document.getElementById('set-instructor-email').value.trim(),
+    parentEmail: document.getElementById('set-parent-email').value.trim(),
+    studentEmail: document.getElementById('set-student-email').value.trim(),
+  };
+  saveSettings(data);
+  showToast('Settings saved! ✅');
+}
+function loadSettingsIntoForm() {
+  const cfg = loadSettings();
+  document.getElementById('set-instructor-email').value = cfg.instructorEmail || '';
+  document.getElementById('set-parent-email').value = cfg.parentEmail || '';
+  document.getElementById('set-student-email').value = cfg.studentEmail || '';
+}
+
+function setRole(r) {
+  role = r;
+  document.getElementById('role-instructor').classList.toggle('active', r === 'instructor');
+  document.getElementById('role-student').classList.toggle('active', r === 'student');
+  if (r === 'student') {
+    // Auto-load most recent 'created' entry if current form is empty / not that entry
+    const history = loadHistory();
+    const pending = history.find(e => e.status === 'created');
+    if (pending && state.status !== 'created') {
+      showToast('Loading latest journal for student…');
+      loadEntry(pending);
+      return;
+    }
+  }
+  applyRoleToForm();
+}
+
+function applyRoleToForm() {
+  const status = state.status;
+  const isStudent = role === 'student';
+  const isInstructor = role === 'instructor';
+  const isPending = status === 'practice_submitted';
+  const isCompleted = status === 'completed';
+
+  // Which groups are editable?
+  const editHeader    = isInstructor && !isPending && !isCompleted;
+  const editSongNames = isInstructor && !isCompleted; // instructor can always edit songs
+  const editClassPerf = isInstructor && !isCompleted;
+  const editPractice  = isStudent && !isCompleted;
+  const editRewards   = isInstructor && isPending;
+
+  // Text inputs
+  ['inp-date','inp-subject','inp-student-name','inp-instructor'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !editHeader;
+  });
+  document.querySelectorAll('.song-input').forEach(el => { el.disabled = !editSongNames; });
+  document.querySelectorAll('#time-row input').forEach(el => { el.disabled = !editPractice; });
+
+  // Clickable non-inputs
+  const tog = (sel, disabled) => {
+    document.querySelectorAll(sel).forEach(el => el.classList.toggle('wf-disabled', disabled));
+  };
+  tog('#day-circles .day-circle', !editPractice);
+  tog('.song-day-dot', !editPractice);
+  tog('#class-perf-stars .grade-btn', !editClassPerf);
+  tog('#stamps .reward-btn', !editRewards);
+  tog('#coins .reward-btn', !editRewards);
+
+  // Textareas: instructor comments locked for students; student questions locked for instructors
+  const commentsEl = document.getElementById('instructor-comments');
+  const questionsEl = document.getElementById('student-questions');
+  if (commentsEl) commentsEl.disabled = isStudent || isCompleted;
+  if (questionsEl) questionsEl.disabled = isInstructor || isCompleted;
+
+  // Status strip
+  updateStatusStrip();
+  renderFooterButtons();
+}
+
+function updateStatusStrip() {
+  const strip = document.getElementById('wf-status-strip');
+  const dot   = document.getElementById('wf-status-dot');
+  const text  = document.getElementById('wf-status-text');
+  const status = state.status;
+  const MAP = {
+    created:             { dot: 'wf-dot-created',             msg: '📬 Waiting for student to fill in practice log' },
+    practice_submitted:  { dot: 'wf-dot-practice_submitted',  msg: '📝 Student submitted — add music stamps & coins' },
+    completed:           { dot: 'wf-dot-completed',           msg: '✅ Journal complete' },
+  };
+  if (!status || !MAP[status]) {
+    strip.classList.remove('visible');
+    return;
+  }
+  strip.classList.add('visible');
+  dot.className = 'wf-status-dot ' + MAP[status].dot;
+  text.textContent = MAP[status].msg;
+}
+
+function renderFooterButtons() {
+  const footer = document.getElementById('journal-footer');
+  if (!footer) return;
+  const status = state.status;
+  const isStudent = role === 'student';
+  const isCompleted = status === 'completed';
+  const isPending = status === 'practice_submitted';
+
+  let html = `<button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+    <button class="btn btn-primary" onclick="printJournal()">🖨 Print</button>`;
+
+  if (isCompleted) {
+    html += `<span class="status-badge status-completed" style="padding:8px 16px;font-size:0.85rem;">✅ Journal Complete</span>`;
+  } else if (isStudent) {
+    if (status === 'created') {
+      html += `<button class="btn btn-save" onclick="studentSubmitPractice()">✅ Submit My Practice</button>`;
+    } else {
+      html += `<button class="btn btn-save" onclick="saveEntry()">💾 Save Draft</button>`;
+    }
+  } else if (isPending) {
+    html += `<button class="btn btn-email" onclick="openEmailModal()">✉️ Send Email</button>
+      <button class="btn btn-save" onclick="instructorComplete()">⭐ Complete &amp; Notify</button>`;
+  } else {
+    html += `<button class="btn btn-email" onclick="openEmailModal()">✉️ Send Email</button>
+      <button class="btn btn-save" onclick="instructorCreate()">💾 Save &amp; Notify</button>`;
+  }
+
+  footer.innerHTML = html;
+}
+
+// Workflow step functions
+function instructorCreate() {
+  state.status = 'created';
+  saveEntry();
+  const cfg = loadSettings();
+  const to = [cfg.parentEmail, cfg.studentEmail].filter(Boolean).join(', ');
+  openWfModal({
+    icon: '📬',
+    title: 'Notify Parent & Student',
+    desc: `The journal for ${formatDate(state.date)} has been saved. Send an email to let the parent and student know the practice log is ready to fill in.`,
+    to: to || '(no emails set — go to ⚙️ Settings)',
+    build: () => buildWfMailto('created', cfg, to),
+  });
+}
+
+function studentSubmitPractice() {
+  state.status = 'practice_submitted';
+  saveEntry();
+  const cfg = loadSettings();
+  const to = cfg.instructorEmail || '';
+  openWfModal({
+    icon: '🎵',
+    title: 'Notify Instructor',
+    desc: `Practice log submitted for ${formatDate(state.date)}. Send an email to let the instructor know it's ready for review.`,
+    to: to || '(no instructor email set — go to ⚙️ Settings)',
+    build: () => buildWfMailto('practice_submitted', cfg, to),
+  });
+}
+
+function instructorComplete() {
+  state.status = 'completed';
+  saveEntry();
+  const cfg = loadSettings();
+  const to = [cfg.parentEmail, cfg.studentEmail].filter(Boolean).join(', ');
+  openWfModal({
+    icon: '⭐',
+    title: 'Notify Parent & Student',
+    desc: `Stamps and coins have been added for ${formatDate(state.date)}. Send a final notification to the parent and student.`,
+    to: to || '(no emails set — go to ⚙️ Settings)',
+    build: () => buildWfMailto('completed', cfg, to),
+  });
+}
+
+function buildWfMailto(type, cfg, to) {
+  const dateStr = formatDate(state.date);
+  const instrument = state.subject ? ` (${state.subject})` : '';
+  const instructor = state.instructor ? `\nInstructor: ${state.instructor}` : '';
+  let subject, body;
+
+  if (type === 'created') {
+    subject = `New Practice Journal Ready — ${dateStr}`;
+    body = `Hello,\n\nA new music practice journal has been created for ${dateStr}${instrument}.${instructor}\n\nThe student can now open the app and fill in their practice log for this week.\n\nPlease ask the student to:\n1. Open the Music Practice Journal app\n2. Switch to Student mode\n3. Fill in practice circles and practice time\n4. Click "Submit My Practice"\n\nThank you!`;
+  } else if (type === 'practice_submitted') {
+    subject = `Practice Log Submitted — ${dateStr}`;
+    const totalMins = Object.values(state.practiceTime || {}).reduce((a,b)=>a+(b||0),0);
+    const days = (state.practicedDays || []).length;
+    body = `Hello,\n\nThe student has submitted their practice log for ${dateStr}${instrument}.${instructor}\n\nSummary:\n• Days practiced: ${days}\n• Total minutes: ${totalMins}\n\nPlease open the app (Instructor mode) to review and add music stamps and coins.\n\nThank you!`;
+  } else {
+    subject = `Practice Journal Complete — ${dateStr}`;
+    const grade = state.classPerfStars ? CLASS_GRADES[state.classPerfStars-1].grade : 'N/A';
+    const totalMins = Object.values(state.practiceTime || {}).reduce((a,b)=>a+(b||0),0);
+    const sqSection = state.studentQuestions ? `\n\n🎵 Student Questions:\n${state.studentQuestions}` : '';
+    const icSection = state.instructorComments ? `\n\n👩‍🏫 Instructor Feedback:\n${state.instructorComments}` : '';
+    body = `Hello,\n\nThe practice journal for ${dateStr}${instrument} is now complete!${instructor}\n\nResults:\n• Class Performance: ${grade}\n• Music Stamps: ${state.stamps || 0} / 6\n• Practice Coins: ${state.coins || 0} / 6\n• Total Minutes Practiced: ${totalMins}${sqSection}${icSection}\n\nGreat work this week! Keep it up! 🎵`;
+  }
+
+  const toEncoded = encodeURIComponent(to);
+  return `mailto:${toEncoded}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+function openWfModal({ icon, title, desc, to, build }) {
+  document.getElementById('wf-modal-icon').textContent = icon;
+  document.getElementById('wf-modal-title').textContent = title;
+  document.getElementById('wf-modal-desc').textContent = desc;
+  document.getElementById('wf-modal-to').textContent = to ? `To: ${to}` : '';
+  pendingWfEmailFn = build;
+  document.getElementById('wf-notify-modal').classList.add('open');
+}
+function closeWfModal() {
+  document.getElementById('wf-notify-modal').classList.remove('open');
+  pendingWfEmailFn = null;
+}
+function sendWfEmail() {
+  if (pendingWfEmailFn) window.location.href = pendingWfEmailFn();
+  closeWfModal();
+  showToast('Opening email app…');
+}
+
+function setChartView(view) {
+  chartView = view;
+  ['month','year','all'].forEach(v => {
+    document.getElementById(`toggle-${v}`).classList.toggle('active', v === view);
+  });
+  renderCharts();
+}
+
+function renderStats() {
+  const history = loadHistory();
+  const grid = document.getElementById('stats-grid');
+
+  const totalWeeks = history.length;
+  const totalMins = history.reduce((sum, e) =>
+    sum + Object.values(e.practiceTime || {}).reduce((a,b) => a + (b||0), 0), 0);
+  const totalStamps = history.reduce((sum, e) => sum + (e.stamps || 0), 0);
+  const totalCoins = history.reduce((sum, e) => sum + (e.coins || 0), 0);
+  const totalDays = history.reduce((sum, e) => sum + (e.practicedDays || []).length, 0);
+
+  const stats = [
+    { value: totalWeeks, label: 'Weeks Logged', icon: '📅' },
+    { value: totalDays, label: 'Days Practiced', icon: '🎵' },
+    { value: totalMins, label: 'Total Minutes', icon: '⏱' },
+    { value: totalStamps, label: 'Stamps Earned', icon: '⭐' },
+    { value: totalCoins, label: 'Coins Earned', icon: '🪙' },
+    { value: totalWeeks ? Math.round(totalMins / totalWeeks) : 0, label: 'Avg Min/Week', icon: '📈' },
+  ];
+
+  grid.innerHTML = '';
+  stats.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `<div style="font-size:1.6rem;">${s.icon}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>`;
+    grid.appendChild(card);
+  });
+
+  // Render top performers for this month in student view
+  renderStatsLeaderboard(history);
+
+  renderCharts();
+}
+
+function renderStatsLeaderboard(allHistory) {
+  const container = document.getElementById('stats-top-performers');
+  const cardsEl = document.getElementById('stats-lb-cards');
+  const dateEl = document.getElementById('stats-lb-date');
+
+  if (!allHistory || allHistory.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  // Filter to this month
+  const now = new Date();
+  const { start, end, label } = getDateRange('month');
+  const filtered = allHistory.filter(entry => {
+    if (!entry.date) return false;
+    const d = new Date(entry.date + 'T12:00:00');
+    return d >= start && d <= end;
+  });
+
+  if (filtered.length === 0) {
+    container.style.display = 'block';
+    dateEl.textContent = label;
+    cardsEl.innerHTML = `<div style="text-align:center;color:#bbb;padding:20px;width:100%;">No entries yet for ${label}.</div>`;
+    return;
+  }
+
+  container.style.display = 'block';
+  dateEl.textContent = label;
+
+  // Most practice days
+  const practiceMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!practiceMap[name]) practiceMap[name] = 0;
+    practiceMap[name] += (entry.practicedDays || []).length;
+  });
+  const topPractice = Object.entries(practiceMap).sort((a, b) => b[1] - a[1])[0];
+
+  // Most stamps
+  const stampMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!stampMap[name]) stampMap[name] = 0;
+    stampMap[name] += (entry.stamps || 0);
+  });
+  const topStamps = Object.entries(stampMap).sort((a, b) => b[1] - a[1])[0];
+
+  // Most coins
+  const coinMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!coinMap[name]) coinMap[name] = 0;
+    coinMap[name] += (entry.coins || 0);
+  });
+  const topCoins = Object.entries(coinMap).sort((a, b) => b[1] - a[1])[0];
+
+  cardsEl.innerHTML = `
+    <div class="leaderboard-card">
+      <div class="lb-icon">🏅</div>
+      <div class="lb-category">Most Practice Days</div>
+      <div class="lb-name">${topPractice ? topPractice[0] : '—'}</div>
+      <div class="lb-value">${topPractice ? topPractice[1] : 0}</div>
+      <div class="lb-detail">days practiced this month</div>
+    </div>
+    <div class="leaderboard-card">
+      <div class="lb-icon">⭐</div>
+      <div class="lb-category">Most Stamps Earned</div>
+      <div class="lb-name">${topStamps ? topStamps[0] : '—'}</div>
+      <div class="lb-value">${topStamps ? topStamps[1] : 0}</div>
+      <div class="lb-detail">stamps earned this month</div>
+    </div>
+    <div class="leaderboard-card">
+      <div class="lb-icon">🪙</div>
+      <div class="lb-category">Most Coins Earned</div>
+      <div class="lb-name">${topCoins ? topCoins[0] : '—'}</div>
+      <div class="lb-value">${topCoins ? topCoins[1] : 0}</div>
+      <div class="lb-detail">coins earned this month</div>
+    </div>
+  `;
+}
+
+function filterHistory(history) {
+  const now = new Date();
+  if (chartView === 'month') {
+    return history.filter(e => {
+      const d = new Date(e.date + 'T00:00:00');
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+  }
+  if (chartView === 'year') {
+    return history.filter(e => new Date(e.date + 'T00:00:00').getFullYear() === now.getFullYear());
+  }
+  return history;
+}
+
+function groupByLabel(entries) {
+  // Group by week label (month view) or month name (year/all view)
+  const groups = {};
+  entries.slice().reverse().forEach(e => {
+    const d = new Date(e.date + 'T00:00:00');
+    let label;
+    if (chartView === 'month') {
+      label = `${d.getMonth()+1}/${d.getDate()}`;
+    } else {
+      label = d.toLocaleDateString('en-US', { month: 'short', year: chartView === 'all' ? '2-digit' : undefined });
+    }
+    if (!groups[label]) groups[label] = { mins: 0, stamps: 0, coins: 0, grades: [] };
+    groups[label].mins += Object.values(e.practiceTime || {}).reduce((a,b) => a+(b||0), 0);
+    groups[label].stamps += e.stamps || 0;
+    groups[label].coins += e.coins || 0;
+    if (e.classPerfStars) groups[label].grades.push(e.classPerfStars);
+  });
+  return groups;
+}
+
+const GRADE_MAP = { 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'A+' };
+const GRADE_VAL = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 };
+
+function renderCharts() {
+  if (typeof Chart === 'undefined') return;
+  const history = filterHistory(loadHistory());
+  const groups = groupByLabel(history);
+  const labels = Object.keys(groups);
+  const mins = labels.map(l => groups[l].mins);
+  const stamps = labels.map(l => groups[l].stamps);
+  const coins = labels.map(l => groups[l].coins);
+  const grades = labels.map(l => {
+    const gs = groups[l].grades;
+    return gs.length ? Math.round(gs.reduce((a,b)=>a+b,0)/gs.length * 10) / 10 : null;
+  });
+
+  const noData = labels.length === 0;
+  const placeholder = noData ? ['No data'] : labels;
+
+  function makeChart(id, config) {
+    if (chartInstances[id]) chartInstances[id].destroy();
+    chartInstances[id] = new Chart(document.getElementById(id).getContext('2d'), config);
+  }
+
+  // Practice time
+  makeChart('chart-time', {
+    type: 'bar',
+    data: {
+      labels: placeholder,
+      datasets: [{
+        label: 'Minutes',
+        data: noData ? [0] : mins,
+        backgroundColor: 'rgba(85,86,168,0.7)',
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 11 } } } }
+    }
+  });
+
+  // Stamps & Coins
+  makeChart('chart-rewards', {
+    type: 'line',
+    data: {
+      labels: placeholder,
+      datasets: [
+        { label: 'Stamps ⭐', data: noData ? [0] : stamps, borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,0.15)', tension: 0.3, fill: true, pointRadius: 4 },
+        { label: 'Coins 🪙', data: noData ? [0] : coins, borderColor: '#f9c74f', backgroundColor: 'rgba(249,199,79,0.15)', tension: 0.3, fill: true, pointRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } },
+      scales: { y: { beginAtZero: true, ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 11 } } } }
+    }
+  });
+
+  // Grade chart
+  makeChart('chart-grade', {
+    type: 'line',
+    data: {
+      labels: placeholder,
+      datasets: [{
+        label: 'Grade',
+        data: noData ? [null] : grades,
+        borderColor: '#43aa8b',
+        backgroundColor: 'rgba(67,170,139,0.15)',
+        tension: 0.3, fill: true, pointRadius: 5,
+        spanGaps: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              if (v === null) return 'No data';
+              const rounded = Math.round(v);
+              return `Grade: ${GRADE_MAP[Math.min(5, Math.max(1, rounded))] || '—'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0.5, max: 5.5,
+          ticks: {
+            stepSize: 1,
+            font: { size: 11 },
+            callback: v => GRADE_MAP[v] || ''
+          }
+        },
+        x: { ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function showTab(name) {
+  ['journal','history','stats','resources','admin','settings'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', ['journal','history','stats','resources','admin','settings'][i] === name);
+  });
+  if (name === 'history') renderHistory();
+  if (name === 'stats') renderStats();
+  if (name === 'resources') renderResources();
+  if (name === 'admin') renderAdmin();
+  if (name === 'settings') loadSettingsIntoForm();
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function printJournal() {
+  window.print();
+}
+
+function openEmailModal() {
+  document.getElementById('email-modal').classList.add('open');
+}
+
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.remove('open');
+}
+
+// ─── Archive actions ──────────────────────────────────────────────────────────
+function deleteEntry(origIdx) {
+  if (!confirm('Delete this journal entry? This cannot be undone.')) return;
+  const history = loadHistory();
+  history.splice(origIdx, 1);
+  localStorage.setItem('musicJournalHistory', JSON.stringify(history));
+  renderHistory();
+  renderStats();
+  showToast('Entry deleted.');
+}
+
+function exportArchive() {
+  const history = loadHistory();
+  if (!history.length) { showToast('No entries to export.'); return; }
+
+  const headers = [
+    'Date','Subject','Student Name','Days Practiced','Total Minutes',
+    'Mon','Tue','Wed','Thu','Fri','Sat','Sun',
+    'Class Grade','Stamps','Coins',
+    'Review 1','Review 2','Review 3','Review 4','Review 5',
+    'Priority 1','Priority 2','Priority 3',
+    'Other 1','Other 2','Other 3',
+    'Student Questions','Instructor Feedback',
+  ];
+
+  const esc = s => `"${(s || '').replace(/"/g, '""')}"`;
+
+  const rows = history.map(e => {
+    const pt = e.practiceTime || {};
+    const grade = e.classPerfStars ? CLASS_GRADES[e.classPerfStars - 1].grade : '';
+    const totalMins = Object.values(pt).reduce((a,b) => a+(b||0), 0);
+    return [
+      e.date || '',
+      esc(e.subject),
+      esc(e.studentName),
+      (e.practicedDays || []).length,
+      totalMins,
+      pt.Mon||0, pt.Tue||0, pt.Wed||0, pt.Thu||0, pt.Fri||0, pt.Sat||0, pt.Sun||0,
+      grade, e.stamps||0, e.coins||0,
+      ...(e.reviewSongs   || []).slice(0,5).map(esc),
+      ...(e.prioritySongs || []).slice(0,3).map(esc),
+      ...(e.otherSongs    || []).slice(0,3).map(esc),
+      esc(e.studentQuestions),
+      esc(e.instructorComments),
+    ].join(',');
+  });
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `music-journal-archive-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exported ${history.length} entr${history.length !== 1 ? 'ies' : 'y'}!`);
+}
+
+function sendEmail() {
+  const to = document.getElementById('email-to').value.trim();
+  const fromName = document.getElementById('email-from-name').value.trim() || 'Your Music Teacher';
+
+  const studentName = state.subject ? `Instrument: ${state.subject}` : '';
+  const instructorLine = state.instructor ? `Instructor: ${state.instructor}` : '';
+  const dateStr = state.date ? formatDate(state.date) : 'This week';
+  const days = DAYS.filter((_, i) => state.practicedDays.includes(i));
+  const totalMins = Object.values(state.practiceTime).reduce((a, b) => a + (b || 0), 0);
+
+  const songList = (songs, days) => songs
+    .map((s, i) => {
+      if (!s) return null;
+      const practiced = (days[i] || []).map(d => DAY_SHORT[d]).join(' ');
+      return `  ${i + 1}. ${s}${practiced ? '  [' + practiced + ']' : ''}`;
+    })
+    .filter(Boolean).join('\n') || '  (none listed)';
+
+  const body = [
+    `Hi,`,
+    ``,
+    `Here is the Music Practice Journal for ${dateStr}${studentName ? ' — ' + studentName : ''}.`,
+    ...(instructorLine ? [instructorLine] : []),
+    `Sent by ${fromName}.`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    `PRACTICE LOG`,
+    `Days practiced: ${days.length > 0 ? days.join(', ') : 'None recorded'}`,
+    `Total practice time: ${totalMins} minutes`,
+    ``,
+    `REVIEW SONG LIST`,
+    songList(state.reviewSongs, state.reviewSongDays),
+    ``,
+    `TOP PRIORITY TO PRACTICE`,
+    songList(state.prioritySongs, state.prioritySongDays),
+    ``,
+    `OTHER EXERCISES / SONGS`,
+    songList(state.otherSongs, state.otherSongDays),
+    ``,
+    `CLASS PERFORMANCE`,
+    `Music Stamps: ${state.stamps || 0} / 6`,
+    `Practice Coins: ${state.coins || 0} / 6`,
+    `Class Performance Rating: ${state.classPerfStars ? CLASS_GRADES[state.classPerfStars - 1].grade : 'N/A'}`,
+    ...(state.studentQuestions ? [``, `━━━━━━━━━━━━━━━━━━━━━━━━━`, `🎵 STUDENT QUESTIONS`, state.studentQuestions] : []),
+    ...(state.instructorComments ? [``, `━━━━━━━━━━━━━━━━━━━━━━━━━`, `👩‍🏫 INSTRUCTOR FEEDBACK`, state.instructorComments] : []),
+    `━━━━━━━━━━━━━━━━━━━━━━━━━`,
+    ``,
+    `Keep up the great practice!`,
+    fromName,
+  ].join('\n');
+
+  const subject = encodeURIComponent(`Music Practice Journal — ${dateStr}`);
+  const encodedBody = encodeURIComponent(body);
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${subject}&body=${encodedBody}`;
+
+  window.location.href = mailto;
+  closeEmailModal();
+  showToast('Opening email app...');
+}
+
+// ─── Admin Dashboard ──────────────────────────────────────────────────────────
+function loadRedemptions() {
+  try { return JSON.parse(localStorage.getItem('musicJournalRedemptions')) || {}; }
+  catch { return {}; }
+}
+function saveRedemptions(data) {
+  localStorage.setItem('musicJournalRedemptions', JSON.stringify(data));
+}
+
+function renderAdmin() {
+  const history = loadHistory();
+  const container = document.getElementById('admin-content');
+  const redemptions = loadRedemptions();
+  const summarySection = document.getElementById('admin-student-summary');
+  const summaryTbody = document.getElementById('admin-student-tbody');
+
+  if (!history.length) {
+    container.innerHTML = '<div class="admin-empty">No journal entries yet.<br>Entries will appear here once instructors create them.</div>';
+    summarySection.style.display = 'none';
+    return;
+  }
+
+  // Build student summary
+  const studentMap = {};
+  history.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    const instrument = (entry.subject || '').trim() || 'Unspecified';
+    const key = name + '||' + instrument;
+    if (!studentMap[key]) {
+      studentMap[key] = { name, instrument, stampsEarned: 0, coinsEarned: 0 };
+    }
+    studentMap[key].stampsEarned += (entry.stamps || 0);
+    studentMap[key].coinsEarned += (entry.coins || 0);
+  });
+
+  const students = Object.values(studentMap);
+  if (students.length > 0) {
+    summarySection.style.display = 'block';
+    summaryTbody.innerHTML = students.map(s => {
+      const red = redemptions[s.instrument] || { stamps: 0, coins: 0 };
+      // Distribute redeemed proportionally if multiple students share instrument
+      const instrStudents = students.filter(st => st.instrument === s.instrument);
+      const totalInstrStamps = instrStudents.reduce((sum, st) => sum + st.stampsEarned, 0);
+      const totalInstrCoins = instrStudents.reduce((sum, st) => sum + st.coinsEarned, 0);
+      const stampRatio = totalInstrStamps > 0 ? s.stampsEarned / totalInstrStamps : 0;
+      const coinRatio = totalInstrCoins > 0 ? s.coinsEarned / totalInstrCoins : 0;
+      const stampsRedeemed = Math.round((red.stamps || 0) * stampRatio);
+      const coinsRedeemed = Math.round((red.coins || 0) * coinRatio);
+      const stampsAvail = Math.max(0, s.stampsEarned - stampsRedeemed);
+      const coinsAvail = Math.max(0, s.coinsEarned - coinsRedeemed);
+      return `<tr>
+        <td class="student-summary-name">${s.name}</td>
+        <td>${s.instrument}</td>
+        <td><span class="summary-badge-stamps">${s.stampsEarned}</span></td>
+        <td><span class="summary-badge-stamps">${stampsRedeemed}</span></td>
+        <td><span class="summary-badge-avail">${stampsAvail}</span></td>
+        <td><span class="summary-badge-coins">${s.coinsEarned}</span></td>
+        <td><span class="summary-badge-coins">${coinsRedeemed}</span></td>
+        <td><span class="summary-badge-avail">${coinsAvail}</span></td>
+      </tr>`;
+    }).join('');
+    // Render leaderboard
+    document.getElementById('admin-leaderboard').style.display = 'block';
+    renderLeaderboard('week');
+  } else {
+    summarySection.style.display = 'none';
+    document.getElementById('admin-leaderboard').style.display = 'none';
+  }
+
+  // Group by instrument/subject
+  const groups = {};
+  const groupOrder = [];
+  history.forEach((entry, idx) => {
+    const key = (entry.subject || '').trim() || 'Unspecified';
+    if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
+    groups[key].push({ entry, idx });
+  });
+
+  container.innerHTML = '';
+
+  groupOrder.forEach(instrument => {
+    const items = groups[instrument];
+
+    const card = document.createElement('div');
+    card.className = 'admin-instrument-card';
+
+    // Collect unique student names in this group
+    const studentNames = [...new Set(items.map(({ entry }) => (entry.studentName || '').trim()).filter(Boolean))];
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'admin-instrument-header';
+    header.innerHTML = `
+      <div>
+        <div class="admin-instrument-name">🎹 ${instrument}</div>
+        <div class="admin-instrument-count">${items.length} entr${items.length !== 1 ? 'ies' : 'y'}${studentNames.length ? ' · ' + studentNames.join(', ') : ''}</div>
+      </div>
+      <span style="font-size:1.2rem;">▼</span>`;
+    card.appendChild(header);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'admin-instrument-body';
+    const bodyId = 'admin-body-' + instrument.replace(/\W/g, '_');
+    body.id = bodyId;
+
+    body.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>👤 Student</th>
+            <th>Instructor</th>
+            <th>Grade</th>
+            <th>⭐ Stamps</th>
+            <th>🪙 Coins</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(({ entry, idx }) => {
+            const grade = entry.classPerfStars ? CLASS_GRADES[entry.classPerfStars - 1] : null;
+            return `<tr>
+              <td>${formatDate(entry.date)}</td>
+              <td style="font-weight:600;color:#3a3a6e;">${entry.studentName || '<span style="color:#ccc;font-weight:400;font-style:italic">—</span>'}</td>
+              <td>${entry.instructor || '—'}</td>
+              <td>${grade ? grade.emoji + ' ' + grade.grade : '—'}</td>
+              <td><input class="admin-edit-input" type="number" min="0" max="6"
+                data-admin-idx="${idx}" data-admin-field="stamps" value="${entry.stamps || 0}" /></td>
+              <td><input class="admin-edit-input" type="number" min="0" max="6"
+                data-admin-idx="${idx}" data-admin-field="coins" value="${entry.coins || 0}" /></td>
+              <td>${entry.status ? `<span class="status-badge status-${entry.status}">${
+                entry.status === 'created' ? '📬 Awaiting' :
+                entry.status === 'practice_submitted' ? '📝 Review' :
+                entry.status === 'completed' ? '✅ Done' : ''
+              }</span>` : '<span style="color:#ccc">—</span>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="admin-save-row">
+        <button class="admin-save-btn" onclick="adminSaveChanges('${bodyId}')">💾 Save Changes</button>
+      </div>`;
+
+    card.appendChild(body);
+
+    // Toggle expand
+    header.addEventListener('click', () => {
+      const isOpen = body.classList.toggle('open');
+      header.querySelector('span:last-child').textContent = isOpen ? '▲' : '▼';
+    });
+
+    // Auto-open first group
+    if (groupOrder.indexOf(instrument) === 0) {
+      body.classList.add('open');
+      header.querySelector('span:last-child').textContent = '▲';
+    }
+
+    container.appendChild(card);
+  });
+}
+
+let currentLbInterval = 'week';
+
+function setLeaderboardInterval(interval) {
+  currentLbInterval = interval;
+  ['week', 'month', 'all'].forEach(id => {
+    document.getElementById('lb-' + id).classList.toggle('active', id === interval);
+  });
+  renderLeaderboard(interval);
+}
+
+function getDateRange(interval) {
+  const now = new Date();
+  let start, end, label;
+  if (interval === 'week') {
+    const day = now.getDay();
+    const diff = day === 0 ? 6 : day - 1; // Monday start
+    start = new Date(now);
+    start.setDate(now.getDate() - diff);
+    start.setHours(0, 0, 0, 0);
+    end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    label = `${fmt(start)} – ${fmt(end)}, ${end.getFullYear()}`;
+  } else if (interval === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    label = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  } else {
+    start = new Date(0);
+    end = new Date(9999, 11, 31);
+    label = 'All Time';
+  }
+  return { start, end, label };
+}
+
+function renderLeaderboard(interval) {
+  const history = loadHistory();
+  const { start, end, label } = getDateRange(interval);
+
+  // Filter entries within the date range
+  const filtered = history.filter(entry => {
+    if (!entry.date) return false;
+    const d = new Date(entry.date + 'T12:00:00');
+    return d >= start && d <= end;
+  });
+
+  const topEl = document.getElementById('admin-top-performers');
+  const rangeEl = document.getElementById('lb-date-range');
+  rangeEl.textContent = label;
+
+  if (filtered.length === 0) {
+    topEl.innerHTML = `<div style="text-align:center;color:#bbb;padding:20px;width:100%;">No entries found for ${label}.</div>`;
+    return;
+  }
+
+  // Most practice days
+  const practiceMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!practiceMap[name]) practiceMap[name] = 0;
+    practiceMap[name] += (entry.practicedDays || []).length;
+  });
+  const topPractice = Object.entries(practiceMap).sort((a, b) => b[1] - a[1])[0];
+
+  // Most stamps
+  const stampMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!stampMap[name]) stampMap[name] = 0;
+    stampMap[name] += (entry.stamps || 0);
+  });
+  const topStamps = Object.entries(stampMap).sort((a, b) => b[1] - a[1])[0];
+
+  // Most coins
+  const coinMap = {};
+  filtered.forEach(entry => {
+    const name = (entry.studentName || '').trim();
+    if (!name) return;
+    if (!coinMap[name]) coinMap[name] = 0;
+    coinMap[name] += (entry.coins || 0);
+  });
+  const topCoins = Object.entries(coinMap).sort((a, b) => b[1] - a[1])[0];
+
+  const periodLabel = interval === 'week' ? 'this week' : interval === 'month' ? 'this month' : 'all time';
+
+  topEl.innerHTML = `
+    <div class="leaderboard-card">
+      <div class="lb-icon">🏅</div>
+      <div class="lb-category">Most Practice Days</div>
+      <div class="lb-name">${topPractice ? topPractice[0] : '—'}</div>
+      <div class="lb-value">${topPractice ? topPractice[1] : 0}</div>
+      <div class="lb-detail">days practiced ${periodLabel}</div>
+    </div>
+    <div class="leaderboard-card">
+      <div class="lb-icon">⭐</div>
+      <div class="lb-category">Most Stamps Earned</div>
+      <div class="lb-name">${topStamps ? topStamps[0] : '—'}</div>
+      <div class="lb-value">${topStamps ? topStamps[1] : 0}</div>
+      <div class="lb-detail">stamps earned ${periodLabel}</div>
+    </div>
+    <div class="leaderboard-card">
+      <div class="lb-icon">🪙</div>
+      <div class="lb-category">Most Coins Earned</div>
+      <div class="lb-name">${topCoins ? topCoins[0] : '—'}</div>
+      <div class="lb-value">${topCoins ? topCoins[1] : 0}</div>
+      <div class="lb-detail">coins earned ${periodLabel}</div>
+    </div>
+  `;
+}
+
+function adminSaveChanges(bodyId) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const history = loadHistory();
+  let changed = 0;
+
+  body.querySelectorAll('.admin-edit-input').forEach(inp => {
+    const idx = parseInt(inp.dataset.adminIdx);
+    const field = inp.dataset.adminField;
+    const val = Math.max(0, Math.min(6, parseInt(inp.value) || 0));
+    if (history[idx] && history[idx][field] !== val) {
+      history[idx][field] = val;
+      changed++;
+    }
+  });
+
+  if (changed > 0) {
+    localStorage.setItem('musicJournalHistory', JSON.stringify(history));
+    showToast(`Updated ${changed} value${changed !== 1 ? 's' : ''}! ✅`);
+    renderAdmin();
+    renderStats();
+  } else {
+    showToast('No changes to save.');
+  }
+}
+
+function adminRedeem(instrument, type, amount) {
+  if (!confirm(`Redeem ${amount} ${type === 'stamps' ? '⭐ stamps' : '🪙 coins'} for "${instrument}"?\n\nThis marks them as redeemed (used for rewards). Individual journal entries are not modified.`)) return;
+
+  const redemptions = loadRedemptions();
+  if (!redemptions[instrument]) redemptions[instrument] = { stamps: 0, coins: 0, log: [] };
+  redemptions[instrument][type] = (redemptions[instrument][type] || 0) + amount;
+  if (!redemptions[instrument].log) redemptions[instrument].log = [];
+  redemptions[instrument].log.push({
+    type,
+    amount,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+  });
+  saveRedemptions(redemptions);
+  showToast(`${amount} ${type} redeemed! 🎁`);
+  renderAdmin();
+}
+
+// ─── Saved Resources ──────────────────────────────────────────────────────────
+function loadResources() {
+  return JSON.parse(localStorage.getItem('mpj_resources') || '[]');
+}
+function saveResourcesData(data) {
+  localStorage.setItem('mpj_resources', JSON.stringify(data));
+}
+
+function saveResource() {
+  const title = document.getElementById('res-title').value.trim();
+  const url = document.getElementById('res-url').value.trim();
+  const category = document.getElementById('res-category').value;
+  const notes = document.getElementById('res-notes').value.trim();
+
+  if (!title || !url) {
+    alert('Please fill in both Title and URL.');
+    return;
+  }
+
+  const resources = loadResources();
+  resources.unshift({
+    id: Date.now(),
+    title,
+    url,
+    category,
+    notes,
+    date: new Date().toISOString()
+  });
+  saveResourcesData(resources);
+
+  document.getElementById('res-title').value = '';
+  document.getElementById('res-url').value = '';
+  document.getElementById('res-category').value = 'Tutorial';
+  document.getElementById('res-notes').value = '';
+
+  showToast('Resource saved! 📌');
+  renderResources();
+}
+
+function deleteResource(id) {
+  if (!confirm('Delete this saved resource?')) return;
+  const resources = loadResources().filter(r => r.id !== id);
+  saveResourcesData(resources);
+  renderResources();
+}
+
+function escResource(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function renderResources() {
+  const search = (document.getElementById('res-search')?.value || '').toLowerCase();
+  const filter = (document.getElementById('res-filter')?.value || '');
+
+  let resources = loadResources();
+  if (filter) resources = resources.filter(r => r.category === filter);
+  if (search) resources = resources.filter(r =>
+    r.title.toLowerCase().includes(search) ||
+    r.url.toLowerCase().includes(search) ||
+    (r.notes && r.notes.toLowerCase().includes(search)) ||
+    r.category.toLowerCase().includes(search)
+  );
+
+  const container = document.getElementById('res-list');
+  if (!container) return;
+
+  if (resources.length === 0) {
+    container.innerHTML = '<div class="res-empty">No saved resources yet.<br>Add your first music resource above! 🎵</div>';
+    return;
+  }
+
+  container.innerHTML = resources.map(r => `
+    <div class="res-entry">
+      <div class="res-entry-header">
+        <span class="res-entry-title">${escResource(r.title)}</span>
+        <span class="res-category-badge">${escResource(r.category)}</span>
+      </div>
+      <div class="res-entry-url"><a href="${escResource(r.url)}" target="_blank" rel="noopener">${escResource(r.url)}</a></div>
+      ${r.notes ? `<div class="res-entry-notes">${escResource(r.notes)}</div>` : ''}
+      <div class="res-entry-footer">
+        <span class="res-entry-date">${new Date(r.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</span>
+        <button class="res-delete-btn" onclick="deleteResource(${r.id})">🗑 Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+</script>
+</body>
+</html>
