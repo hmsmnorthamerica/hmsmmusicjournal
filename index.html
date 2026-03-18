@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Music Practice Journal</title>
+  <title>Happy Minds School of Music — Practice Journal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1331,6 +1331,63 @@
       font-size: 0.95rem;
     }
 
+    /* ── Welcome bar ── */
+    .welcome-bar {
+      max-width: 880px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: white;
+      border-radius: 14px;
+      padding: 12px 20px;
+      box-shadow: 0 2px 10px rgba(85,86,168,0.08);
+      flex-wrap: wrap;
+    }
+    .welcome-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .welcome-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #3a3a6e;
+    }
+    .welcome-role-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-student { background: #e8f5e9; color: #2e7d32; }
+    .badge-instructor { background: #e3f2fd; color: #1565c0; }
+    .badge-admin { background: #fce4ec; color: #c62828; }
+    .logout-btn {
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 2px solid #e0e4ff;
+      background: white;
+      color: #5556a8;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      background: #5556a8;
+      color: white;
+      border-color: #5556a8;
+    }
+
+    /* Hide body until session check */
+    .app-hidden { display: none !important; }
+
     @media (max-width: 600px) {
       .journal-header { grid-template-columns: 1fr; }
       .header-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
@@ -1338,27 +1395,40 @@
       .section-label-cell { border-right: none; border-bottom: 2px solid #e0e4ff; }
       .res-form-row { grid-template-columns: 1fr; }
       .res-entry-header { flex-direction: column; gap: 6px; }
+      .welcome-bar { padding: 10px 14px; }
     }
   </style>
 </head>
 <body>
 
-<h1 class="app-title">🎵 Music Practice Journal</h1>
-<p class="app-subtitle">Track your weekly practice and earn stamps & coins!</p>
+<!-- Session guard: everything hidden until JS verifies session -->
+<div id="app-root" class="app-hidden">
 
-<div class="tabs">
+<!-- Welcome bar -->
+<div class="welcome-bar" id="welcome-bar">
+  <div class="welcome-info">
+    <span class="welcome-name" id="welcome-name">Welcome</span>
+    <span class="welcome-role-badge" id="welcome-role-badge"></span>
+  </div>
+  <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+</div>
+
+<h1 class="app-title">🎵 Happy Minds School of Music</h1>
+<p class="app-subtitle">Music Practice Journal — Track your weekly practice and earn stamps & coins!</p>
+
+<div class="tabs" id="main-tabs">
   <button class="tab-btn active" onclick="showTab('journal')">📝 This Week</button>
   <button class="tab-btn" onclick="showTab('history')">📚 History</button>
   <button class="tab-btn" onclick="showTab('stats')">📈 My Progress Track</button>
   <button class="tab-btn" onclick="showTab('resources')">📌 Saved Resources</button>
-  <button class="tab-btn" onclick="showTab('admin')">🔑 Admin</button>
+  <button class="tab-btn" id="tab-btn-admin" onclick="showTab('admin')">🔑 Admin</button>
   <button class="tab-btn" onclick="showTab('settings')">⚙️ Settings</button>
 </div>
 
 <!-- JOURNAL TAB -->
 <div id="tab-journal">
-  <!-- Role toggle -->
-  <div class="role-toggle">
+  <!-- Role toggle (auto-set from session, admin/instructor can switch) -->
+  <div class="role-toggle" id="role-toggle-bar">
     <span class="role-label">View as:</span>
     <button class="role-btn active" id="role-instructor" onclick="setRole('instructor')">👩‍🏫 Instructor</button>
     <button class="role-btn" id="role-student" onclick="setRole('student')">🎵 Student</button>
@@ -3312,6 +3382,100 @@ function renderResources() {
     </div>
   `).join('');
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// SESSION GUARD & ROLE-BASED UI
+// ════════════════════════════════════════════════════════════════════════════
+
+let currentSession = null;
+
+function checkSession() {
+  try {
+    const raw = localStorage.getItem('mj_auth_user');
+    if (!raw) { redirectToAuth(); return null; }
+    const session = JSON.parse(raw);
+    if (!session || !session.email || !session.role) { redirectToAuth(); return null; }
+    return session;
+  } catch(e) { redirectToAuth(); return null; }
+}
+
+function redirectToAuth() {
+  window.location.href = 'auth.html';
+}
+
+function logout() {
+  localStorage.removeItem('mj_auth_user');
+  window.location.href = 'auth.html';
+}
+
+function initSession() {
+  currentSession = checkSession();
+  if (!currentSession) return;
+
+  // Show the app
+  document.getElementById('app-root').classList.remove('app-hidden');
+
+  // Welcome bar
+  const roleLabels = { student: '🎵 Student', instructor: '👩‍🏫 Instructor', admin: '🔑 Administrator' };
+  const badgeClasses = { student: 'badge-student', instructor: 'badge-instructor', admin: 'badge-admin' };
+  document.getElementById('welcome-name').textContent = 'Welcome, ' + currentSession.name;
+  const badge = document.getElementById('welcome-role-badge');
+  badge.textContent = roleLabels[currentSession.role] || currentSession.role;
+  badge.className = 'welcome-role-badge ' + (badgeClasses[currentSession.role] || '');
+
+  // Role-based tab visibility
+  const sessionRole = currentSession.role;
+
+  // Admin tab: only visible to admin and instructor
+  const adminTabBtn = document.getElementById('tab-btn-admin');
+  if (sessionRole === 'student') {
+    adminTabBtn.style.display = 'none';
+  }
+
+  // Role toggle: Students can only be in student mode
+  const roleToggle = document.getElementById('role-toggle-bar');
+  if (sessionRole === 'student') {
+    roleToggle.style.display = 'none';
+    role = 'student';
+  } else {
+    // Instructors and admins default to instructor mode but can toggle
+    role = 'instructor';
+  }
+
+  // Auto-fill student/instructor name in the journal form
+  if (sessionRole === 'student') {
+    const nameInput = document.getElementById('inp-student-name');
+    if (nameInput && !nameInput.value) nameInput.value = currentSession.name;
+    state.studentName = currentSession.name;
+  } else if (sessionRole === 'instructor') {
+    const instrInput = document.getElementById('inp-instructor');
+    if (instrInput && !instrInput.value) instrInput.value = currentSession.name;
+    state.instructor = currentSession.name;
+  }
+
+  applyRoleToForm();
+}
+
+// Run session check immediately before DOMContentLoaded
+(function() {
+  // Quick session check — if no session, redirect immediately
+  const raw = localStorage.getItem('mj_auth_user');
+  if (!raw) { window.location.href = 'auth.html'; return; }
+  try {
+    const s = JSON.parse(raw);
+    if (!s || !s.email || !s.role) { window.location.href = 'auth.html'; }
+  } catch(e) { window.location.href = 'auth.html'; }
+})();
+
+// Hook into DOMContentLoaded to init session after existing init
+const originalDCL = document.addEventListener;
+document.addEventListener('DOMContentLoaded', function sessionInit() {
+  // Small delay to ensure existing DOMContentLoaded handler ran first
+  setTimeout(initSession, 10);
+});
 </script>
+
+</div><!-- /app-root -->
+
 </body>
 </html>

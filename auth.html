@@ -3,1157 +3,699 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Music Journal - Auth</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 50:'#f0f0ff', 100:'#e0e4ff', 200:'#c5caf5', 400:'#7b7ce0', 500:'#5556a8', 600:'#3a3a6e', 700:'#2d2d5e' }
-          }
-        }
-      }
+  <title>Happy Minds School of Music — Practice Journal</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e0e4ff 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-  </script>
+
+    .auth-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(85,86,168,0.15);
+      max-width: 440px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .auth-header {
+      background: linear-gradient(135deg, #5556a8 0%, #7b7ce0 100%);
+      padding: 32px 28px 24px;
+      text-align: center;
+      color: white;
+    }
+    .auth-logo { font-size: 2.4rem; margin-bottom: 8px; }
+    .auth-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .auth-subtitle { font-size: 0.85rem; opacity: 0.85; }
+
+    .auth-body { padding: 28px; }
+
+    /* Tab toggle */
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #e0e4ff;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 11px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: white;
+      color: #5556a8;
+      border: none;
+      transition: all 0.2s;
+    }
+    .auth-tab.active {
+      background: #5556a8;
+      color: white;
+    }
+
+    /* Form */
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e0e4ff;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus { border-color: #5556a8; }
+    .form-select {
+      appearance: none;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235556a8' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center;
+      cursor: pointer;
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #5556a8 0%, #7b7ce0 100%);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+    .auth-btn:hover { opacity: 0.92; }
+    .auth-btn:active { transform: scale(0.98); }
+
+    .auth-error {
+      display: none;
+      background: #fff0f0;
+      color: #c44;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      border: 1.5px solid #fdd;
+    }
+    .auth-error.show { display: block; }
+
+    .auth-success {
+      display: none;
+      background: #f0fff4;
+      color: #2d7a3a;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      border: 1.5px solid #c6f6d5;
+    }
+    .auth-success.show { display: block; }
+
+    .auth-footer {
+      text-align: center;
+      padding: 0 28px 24px;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
+    .password-toggle {
+      position: relative;
+    }
+    .password-toggle .toggle-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #aaa;
+      user-select: none;
+    }
+    .password-toggle .toggle-eye:hover { color: #5556a8; }
+
+    /* Admin create user section */
+    .admin-create-section {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e4ff;
+    }
+    .admin-create-section.show { display: block; }
+    .admin-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #3a3a6e;
+      margin-bottom: 14px;
+    }
+    .admin-section-hint {
+      font-size: 0.78rem;
+      color: #999;
+      margin-bottom: 14px;
+    }
+    .role-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .role-student { background: #e8f5e9; color: #2e7d32; }
+    .role-instructor { background: #e3f2fd; color: #1565c0; }
+    .role-admin { background: #fce4ec; color: #c62828; }
+
+    /* Forgot password link */
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 0.82rem;
+      color: #5556a8;
+      cursor: pointer;
+      margin-top: -8px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* Forgot password panel */
+    .forgot-panel { display: none; }
+    .forgot-panel.active { display: block; }
+    .forgot-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.82rem;
+      color: #5556a8;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: none;
+      background: none;
+      padding: 0;
+    }
+    .forgot-back:hover { text-decoration: underline; }
+    .forgot-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #3a3a6e;
+      margin-bottom: 6px;
+    }
+    .forgot-hint {
+      font-size: 0.82rem;
+      color: #999;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .new-password-fields { display: none; }
+    .new-password-fields.show { display: block; }
+
+    @media (max-width: 480px) {
+      .auth-header { padding: 24px 20px 18px; }
+      .auth-body { padding: 20px; }
+    }
+  </style>
 </head>
-<body class="bg-brand-50 min-h-screen">
-  <div id="root"></div>
+<body>
 
-  <script src="security-rules.js"></script>
-  <script type="text/babel">
-    const { useState, useEffect, createContext, useContext } = React;
+<div class="auth-container">
+  <!-- Header -->
+  <div class="auth-header">
+    <div class="auth-logo">🎵</div>
+    <div class="auth-title">Happy Minds School of Music</div>
+    <div class="auth-subtitle">Music Practice Journal — Track your practice and earn stamps & coins!</div>
+  </div>
 
-    // ─── Auth Context ─────────────────────────────────────────────────────────────
-    const AuthContext = createContext(null);
+  <!-- Body -->
+  <div class="auth-body">
+    <!-- Tab toggle -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
 
-    function AuthProvider({ children }) {
-      const [user, setUser] = useState(() => {
-        const saved = localStorage.getItem('mj_auth_user');
-        return saved ? JSON.parse(saved) : null;
-      });
+    <!-- Error / Success messages -->
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
 
-      const register = (userData) => {
-        const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-        if (users.some(u => u.email === userData.email)) {
-          return { success: false, error: 'Email already registered.' };
-        }
-        // Add instructorId for students (null = unassigned)
-        // Add studentsList for instructors (empty array)
-        const enriched = { ...userData };
-        if (userData.role === 'student') {
-          enriched.instructorId = null;
-        }
-        if (userData.role === 'instructor') {
-          enriched.studentsList = [];
-        }
-        users.push(enriched);
-        localStorage.setItem('mj_auth_users', JSON.stringify(users));
-        return { success: true };
-      };
+    <!-- LOGIN FORM -->
+    <form class="auth-form active" id="form-login" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="login-email">Email</label>
+        <input class="form-input" id="login-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <div class="password-toggle">
+          <input class="form-input" id="login-password" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+          <span class="toggle-eye" onclick="togglePassword('login-password', this)">👁️</span>
+        </div>
+      </div>
+      <span class="forgot-link" onclick="showForgotPassword()">Forgot password?</span>
+      <button class="auth-btn" type="submit">Sign In</button>
+    </form>
 
-      const login = (email, password) => {
-        const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-        const found = users.find(u => u.email === email && u.password === password);
-        if (!found) return { success: false, error: 'Invalid email or password.' };
-        const loggedIn = { name: found.name, email: found.email, role: found.role, instructorId: found.instructorId || null, studentsList: found.studentsList || [] };
-        setUser(loggedIn);
-        localStorage.setItem('mj_auth_user', JSON.stringify(loggedIn));
-        return { success: true, user: loggedIn };
-      };
-
-      const logout = () => {
-        setUser(null);
-        localStorage.removeItem('mj_auth_user');
-      };
-
-      // Assign a teacher to a student (admin action)
-      const assignTeacher = (studentEmail, instructorEmail) => {
-        const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-        const studentIdx = users.findIndex(u => u.email === studentEmail && u.role === 'student');
-        const instructorIdx = users.findIndex(u => u.email === instructorEmail && u.role === 'instructor');
-        if (studentIdx === -1 || instructorIdx === -1) return false;
-
-        // Remove student from old instructor's list if previously assigned
-        const oldInstructorId = users[studentIdx].instructorId;
-        if (oldInstructorId) {
-          const oldIdx = users.findIndex(u => u.email === oldInstructorId);
-          if (oldIdx !== -1 && users[oldIdx].studentsList) {
-            users[oldIdx].studentsList = users[oldIdx].studentsList.filter(e => e !== studentEmail);
-          }
-        }
-
-        // Set instructorId on student
-        users[studentIdx].instructorId = instructorEmail;
-
-        // Add student to instructor's studentsList
-        if (!users[instructorIdx].studentsList) users[instructorIdx].studentsList = [];
-        if (!users[instructorIdx].studentsList.includes(studentEmail)) {
-          users[instructorIdx].studentsList.push(studentEmail);
-        }
-
-        localStorage.setItem('mj_auth_users', JSON.stringify(users));
-        return true;
-      };
-
-      // Unassign a teacher from a student
-      const unassignTeacher = (studentEmail) => {
-        const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-        const studentIdx = users.findIndex(u => u.email === studentEmail && u.role === 'student');
-        if (studentIdx === -1) return false;
-
-        const oldInstructorId = users[studentIdx].instructorId;
-        if (oldInstructorId) {
-          const oldIdx = users.findIndex(u => u.email === oldInstructorId);
-          if (oldIdx !== -1 && users[oldIdx].studentsList) {
-            users[oldIdx].studentsList = users[oldIdx].studentsList.filter(e => e !== studentEmail);
-          }
-        }
-        users[studentIdx].instructorId = null;
-        localStorage.setItem('mj_auth_users', JSON.stringify(users));
-        return true;
-      };
-
-      // ─── Role-Based Balance Transactions ──────────────────────────────────────
-      // Student: Read-only (cannot modify balances)
-      // Instructor: Can update balances for assigned students only
-      // Admin: Can update balances for any student
-
-      const getBalance = (studentEmail) => {
-        const balances = JSON.parse(localStorage.getItem('mj_balances') || '{}');
-        return balances[studentEmail] || { stamps: 0, coins: 0 };
-      };
-
-      const updateBalance = (currentUser, studentEmail, type, amount) => {
-        // Role Check: Students have 0 permission to write/update
-        if (currentUser.role === 'student') {
-          return { success: false, error: 'Students cannot modify balances.' };
-        }
-
-        // Role Check: Instructors can only update their assigned students
-        if (currentUser.role === 'instructor') {
-          const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-          const student = users.find(u => u.email === studentEmail && u.role === 'student');
-          if (!student || student.instructorId !== currentUser.email) {
-            return { success: false, error: 'You can only update balances for your assigned students.' };
-          }
-        }
-
-        // Role Check: Admin can update any student (no restrictions)
-        if (currentUser.role !== 'admin' && currentUser.role !== 'instructor') {
-          return { success: false, error: 'Unauthorized role.' };
-        }
-
-        // Validate type
-        if (type !== 'stamps' && type !== 'coins') {
-          return { success: false, error: 'Invalid balance type. Use "stamps" or "coins".' };
-        }
-
-        // Perform the transaction
-        const balances = JSON.parse(localStorage.getItem('mj_balances') || '{}');
-        if (!balances[studentEmail]) {
-          balances[studentEmail] = { stamps: 0, coins: 0 };
-        }
-
-        const newValue = balances[studentEmail][type] + amount;
-        if (newValue < 0) {
-          return { success: false, error: `Insufficient ${type}. Current: ${balances[studentEmail][type]}, attempted: ${amount}` };
-        }
-
-        balances[studentEmail][type] = newValue;
-        localStorage.setItem('mj_balances', JSON.stringify(balances));
-
-        // Log the transaction
-        const txLog = JSON.parse(localStorage.getItem('mj_transactions') || '[]');
-        txLog.push({
-          date: new Date().toISOString(),
-          performedBy: currentUser.email,
-          performedByRole: currentUser.role,
-          studentEmail,
-          type,
-          amount,
-          newBalance: newValue
-        });
-        localStorage.setItem('mj_transactions', JSON.stringify(txLog));
-
-        return { success: true, newBalance: balances[studentEmail] };
-      };
-
-      return (
-        <AuthContext.Provider value={{ user, register, login, logout, assignTeacher, unassignTeacher, getBalance, updateBalance }}>
-          {children}
-        </AuthContext.Provider>
-      );
-    }
-
-    function useAuth() {
-      return useContext(AuthContext);
-    }
-
-    // ─── Simple Router ────────────────────────────────────────────────────────────
-    function useRouter() {
-      const [path, setPath] = useState(window.location.hash.slice(1) || '/');
-
-      useEffect(() => {
-        const onHash = () => setPath(window.location.hash.slice(1) || '/');
-        window.addEventListener('hashchange', onHash);
-        return () => window.removeEventListener('hashchange', onHash);
-      }, []);
-
-      const navigate = (to) => { window.location.hash = to; };
-      return { path, navigate };
-    }
-
-    // ─── Protected Route ──────────────────────────────────────────────────────────
-    function ProtectedRoute({ children, allowedRoles, navigate }) {
-      const { user } = useAuth();
-
-      if (!user) {
-        useEffect(() => { navigate('/login'); }, []);
-        return (
-          <div className="text-center py-20 text-gray-400">
-            Redirecting to login...
-          </div>
-        );
-      }
-
-      if (allowedRoles && !allowedRoles.includes(user.role)) {
-        return (
-          <div className="max-w-lg mx-auto mt-20 bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="text-5xl mb-4">🚫</div>
-            <h2 className="text-xl font-bold text-red-600 mb-2">Access Denied</h2>
-            <p className="text-gray-500 mb-6">
-              You don't have permission to access this page.<br/>
-              Your role: <span className="font-semibold text-brand-500 capitalize">{user.role}</span>
-            </p>
-            <button
-              onClick={() => navigate(getRoleDashboard(user.role))}
-              className="px-6 py-2 bg-brand-500 text-white rounded-full font-semibold hover:bg-brand-600 transition"
-            >
-              Go to My Dashboard
-            </button>
-          </div>
-        );
-      }
-
-      return children;
-    }
-
-    // ─── Role → Dashboard Path ────────────────────────────────────────────────────
-    function getRoleDashboard(role) {
-      switch (role) {
-        case 'instructor': return '/instructor-dashboard';
-        case 'student':    return '/student-dashboard';
-        case 'admin':      return '/admin-dashboard';
-        default:           return '/login';
-      }
-    }
-
-    // ─── Registration Form ────────────────────────────────────────────────────────
-    function RegisterPage({ navigate }) {
-      const { register } = useAuth();
-      const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' });
-      const [error, setError] = useState('');
-      const [success, setSuccess] = useState(false);
-
-      const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-      };
-
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        setError('');
-        if (!form.name || !form.email || !form.password) {
-          setError('Please fill in all fields.');
-          return;
-        }
-        if (form.password.length < 6) {
-          setError('Password must be at least 6 characters.');
-          return;
-        }
-        const result = register(form);
-        if (!result.success) {
-          setError(result.error);
-        } else {
-          setSuccess(true);
-          setTimeout(() => navigate('/login'), 1500);
-        }
-      };
-
-      return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <div className="text-4xl mb-2">🎵</div>
-              <h1 className="text-2xl font-extrabold text-brand-600">Create Account</h1>
-              <p className="text-gray-400 text-sm mt-1">Join Music Practice Journal</p>
+    <!-- FORGOT PASSWORD PANEL -->
+    <div class="forgot-panel" id="forgot-panel">
+      <button class="forgot-back" onclick="hideForgotPassword()">← Back to Sign In</button>
+      <div class="forgot-title">🔑 Reset Your Password</div>
+      <div class="forgot-hint">Enter your registered email to look up your account, then set a new password.</div>
+      <form onsubmit="handleForgotPassword(event)">
+        <div class="form-group">
+          <label class="form-label" for="forgot-email">Email</label>
+          <input class="form-input" id="forgot-email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div class="new-password-fields" id="new-password-fields">
+          <div class="form-group">
+            <label class="form-label" for="forgot-new-password">New Password</label>
+            <div class="password-toggle">
+              <input class="form-input" id="forgot-new-password" type="password" placeholder="At least 6 characters" minlength="6" />
+              <span class="toggle-eye" onclick="togglePassword('forgot-new-password', this)">👁️</span>
             </div>
-
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-5">
-              {error && (
-                <div className="bg-red-50 text-red-600 text-sm font-medium px-4 py-3 rounded-lg border border-red-200">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="bg-green-50 text-green-600 text-sm font-medium px-4 py-3 rounded-lg border border-green-200">
-                  Registration successful! Redirecting to login...
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Name</label>
-                <input
-                  type="text" name="name" value={form.name} onChange={handleChange}
-                  placeholder="e.g. Emily Smith"
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email</label>
-                <input
-                  type="email" name="email" value={form.email} onChange={handleChange}
-                  placeholder="you@example.com"
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Password</label>
-                <input
-                  type="password" name="password" value={form.password} onChange={handleChange}
-                  placeholder="Minimum 6 characters"
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Role</label>
-                <select
-                  name="role" value={form.role} onChange={handleChange}
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition bg-white"
-                >
-                  <option value="student">Student</option>
-                  <option value="instructor">Instructor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              <div className="bg-brand-50 rounded-lg px-4 py-3 text-xs text-brand-500">
-                Selected role: <span className="font-bold capitalize">{form.role}</span>
-                {form.role === 'student' && ' — Track your practice and earn stamps & coins'}
-                {form.role === 'instructor' && ' — Manage students and review journals'}
-                {form.role === 'admin' && ' — Full access to all dashboards and settings'}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-brand-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-brand-600 transition"
-              >
-                Create Account
-              </button>
-
-              <p className="text-center text-sm text-gray-400">
-                Already have an account?{' '}
-                <a href="#/login" className="text-brand-500 font-semibold hover:underline">Sign In</a>
-              </p>
-            </form>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="forgot-confirm-password">Confirm New Password</label>
+            <div class="password-toggle">
+              <input class="form-input" id="forgot-confirm-password" type="password" placeholder="Re-enter new password" minlength="6" />
+              <span class="toggle-eye" onclick="togglePassword('forgot-confirm-password', this)">👁️</span>
+            </div>
           </div>
         </div>
-      );
-    }
+        <button class="auth-btn" type="submit" id="forgot-btn">Find My Account</button>
+      </form>
+    </div>
 
-    // ─── Login Form ───────────────────────────────────────────────────────────────
-    function LoginPage({ navigate }) {
-      const { login } = useAuth();
-      const [form, setForm] = useState({ email: '', password: '' });
-      const [error, setError] = useState('');
-
-      const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-      };
-
-      const handleSubmit = (e) => {
-        e.preventDefault();
-        setError('');
-        if (!form.email || !form.password) {
-          setError('Please fill in all fields.');
-          return;
-        }
-        const result = login(form.email, form.password);
-        if (!result.success) {
-          setError(result.error);
-        } else {
-          navigate(getRoleDashboard(result.user.role));
-        }
-      };
-
-      return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <div className="text-4xl mb-2">🎵</div>
-              <h1 className="text-2xl font-extrabold text-brand-600">Welcome Back</h1>
-              <p className="text-gray-400 text-sm mt-1">Sign in to Music Practice Journal</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-5">
-              {error && (
-                <div className="bg-red-50 text-red-600 text-sm font-medium px-4 py-3 rounded-lg border border-red-200">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email</label>
-                <input
-                  type="email" name="email" value={form.email} onChange={handleChange}
-                  placeholder="you@example.com"
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Password</label>
-                <input
-                  type="password" name="password" value={form.password} onChange={handleChange}
-                  placeholder="Enter your password"
-                  className="w-full border-2 border-brand-200 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none transition"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-brand-500 text-white py-3 rounded-xl font-bold text-sm hover:bg-brand-600 transition"
-              >
-                Sign In
-              </button>
-
-              <p className="text-center text-sm text-gray-400">
-                Don't have an account?{' '}
-                <a href="#/register" className="text-brand-500 font-semibold hover:underline">Create Account</a>
-              </p>
-            </form>
-          </div>
+    <!-- REGISTER FORM -->
+    <form class="auth-form" id="form-register" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label" for="reg-name">Full Name</label>
+        <input class="form-input" id="reg-name" type="text" placeholder="Jane Smith" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-email">Email</label>
+        <input class="form-input" id="reg-email" type="email" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-password">Password</label>
+        <div class="password-toggle">
+          <input class="form-input" id="reg-password" type="password" placeholder="At least 6 characters" required minlength="6" autocomplete="new-password" />
+          <span class="toggle-eye" onclick="togglePassword('reg-password', this)">👁️</span>
         </div>
-      );
-    }
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="reg-role">I am a…</label>
+        <select class="form-select" id="reg-role" required>
+          <option value="student">🎵 Student</option>
+          <option value="instructor">👩‍🏫 Instructor</option>
+        </select>
+      </div>
+      <button class="auth-btn" type="submit">Create Account</button>
+    </form>
 
-    // ─── Dashboard Components ─────────────────────────────────────────────────────
-    function DashboardLayout({ title, icon, color, children, navigate }) {
-      const { user, logout } = useAuth();
-
-      const handleLogout = () => {
-        logout();
-        navigate('/login');
-      };
-
-      return (
-        <div className="min-h-screen">
-          <nav className={`${color} text-white px-6 py-4 flex items-center justify-between flex-wrap gap-3`}>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{icon}</span>
-              <div>
-                <h1 className="font-bold text-lg">{title}</h1>
-                <p className="text-xs opacity-80">Welcome, {user?.name}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs bg-white/20 px-3 py-1 rounded-full capitalize font-semibold">
-                {user?.role}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="text-xs bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full font-semibold transition"
-              >
-                Logout
-              </button>
-            </div>
-          </nav>
-          <div className="max-w-5xl mx-auto px-4 py-8">
-            {children}
-          </div>
+    <!-- Admin: Create user section (visible only after Admin logs in, then navigates back) -->
+    <div class="admin-create-section" id="admin-create-section">
+      <div class="admin-section-title">🔑 Admin — Create a New User</div>
+      <div class="admin-section-hint">Admins can create accounts of any role, including other Admins.</div>
+      <form onsubmit="handleAdminCreateUser(event)">
+        <div class="form-group">
+          <label class="form-label" for="admin-new-name">Full Name</label>
+          <input class="form-input" id="admin-new-name" type="text" placeholder="New user name" required />
         </div>
-      );
-    }
-
-    function StudentDashboard({ navigate }) {
-      const { user, getBalance } = useAuth();
-      const allUsers = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-      const myProfile = allUsers.find(u => u.email === user.email) || {};
-      const history = JSON.parse(localStorage.getItem('musicJournalHistory') || '[]');
-
-      // Privacy: Only show this student's own practice logs
-      const myEntries = history.filter(e =>
-        (e.studentName && e.studentName.toLowerCase() === user.name.toLowerCase()) ||
-        (e.studentEmail && e.studentEmail.toLowerCase() === user.email.toLowerCase())
-      );
-
-      // Calculate student-specific stats
-      const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
-      weekStart.setHours(0, 0, 0, 0);
-
-      const thisWeekEntries = myEntries.filter(e => new Date(e.date || e.weekOf) >= weekStart);
-      const practiceDays = thisWeekEntries.length;
-
-      // Read-only balance from centralized store (student cannot modify)
-      const balance = getBalance(user.email);
-
-      // Get assignments
-      const assignments = JSON.parse(localStorage.getItem('mj_assignments') || '[]');
-      const myAssignedTeacher = myProfile.instructorId;
-      const teacherProfile = myAssignedTeacher ? allUsers.find(u => u.email === myAssignedTeacher) : null;
-
-      return (
-        <DashboardLayout title="Student Dashboard" icon="🎵" color="bg-emerald-600" navigate={navigate}>
-          {/* Assigned Teacher Info */}
-          <div className="mb-6 bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
-            <span className="text-3xl">👩‍🏫</span>
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">My Teacher</p>
-              {teacherProfile ? (
-                <p className="font-bold text-brand-600">{teacherProfile.name} <span className="text-xs text-gray-400 font-normal">({teacherProfile.email})</span></p>
-              ) : (
-                <p className="text-sm text-gray-400 italic">No teacher assigned yet</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <DashCard icon="📝" title="This Week's Journal" desc={`${practiceDays} practice ${practiceDays === 1 ? 'entry' : 'entries'} this week`} />
-            <DashCard icon="📅" title="Practice Streak" desc={`${practiceDays} ${practiceDays === 1 ? 'day' : 'days'} this week — ${practiceDays >= 5 ? 'keep it up!' : 'keep practicing!'}`} accent="text-emerald-600" />
-            <DashCard icon="⭐" title="Stamps Balance" desc={`${balance.stamps} stamps (read-only)`} />
-            <DashCard icon="🪙" title="Coins Balance" desc={`${balance.coins} coins (read-only)`} />
-            <DashCard icon="🏆" title="Top Performers" desc="See who practiced the most this month" />
-            <DashCard icon="📈" title="My Progress" desc={`${myEntries.length} total practice entries`} />
-          </div>
-
-          {assignments.length > 0 && (
-            <div className="mt-8 bg-white rounded-2xl shadow-md overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h3 className="font-bold text-brand-600">My Assignments</h3>
-              </div>
-              <div className="divide-y divide-gray-50">
-                {assignments.map((a, i) => (
-                  <div key={i} className="px-6 py-4 flex items-start gap-3">
-                    <span className="text-2xl">📋</span>
-                    <div>
-                      <p className="font-semibold text-brand-600">{a.title}</p>
-                      <p className="text-sm text-gray-500">{a.description}</p>
-                      <p className="text-xs text-gray-400 mt-1">Posted by {a.postedBy} on {new Date(a.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-8 bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-bold text-brand-600 mb-3">Open Music Practice Journal</h3>
-            <p className="text-sm text-gray-500 mb-3">To open your Music Practice Journal, click the button below or copy the file path into your browser:</p>
-            <div className="bg-gray-50 rounded-lg px-4 py-2 mb-4 overflow-x-auto">
-              <code className="text-xs text-brand-500 select-all break-all">file:///Users/lilliany/Desktop/music%20practice%20journal%20app/index.html</code>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a href="index.html" className="px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 transition shadow">
-                Open Practice Journal
-              </a>
-            </div>
-          </div>
-        </DashboardLayout>
-      );
-    }
-
-    function PostAssignmentButton({ userName }) {
-      const [showModal, setShowModal] = React.useState(false);
-      const [title, setTitle] = React.useState('');
-      const [description, setDescription] = React.useState('');
-      const [success, setSuccess] = React.useState(false);
-
-      function handlePost(e) {
-        e.preventDefault();
-        const assignments = JSON.parse(localStorage.getItem('mj_assignments') || '[]');
-        assignments.push({
-          title,
-          description,
-          postedBy: userName,
-          date: new Date().toISOString()
-        });
-        localStorage.setItem('mj_assignments', JSON.stringify(assignments));
-        setTitle('');
-        setDescription('');
-        setSuccess(true);
-        setTimeout(() => { setSuccess(false); setShowModal(false); }, 1500);
-      }
-
-      return (
-        <React.Fragment>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-5 py-2.5 bg-brand-500 text-white rounded-xl font-bold shadow hover:bg-brand-600 transition flex items-center gap-2"
-          >
-            📋 Post Assignment
-          </button>
-
-          {showModal && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                <h3 className="text-lg font-bold text-brand-600 mb-4">Post New Assignment</h3>
-                {success ? (
-                  <div className="text-center py-8">
-                    <span className="text-4xl">✅</span>
-                    <p className="mt-2 font-semibold text-emerald-600">Assignment posted!</p>
-                  </div>
-                ) : (
-                  <form onSubmit={handlePost}>
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">Title</label>
-                    <input value={title} onChange={e => setTitle(e.target.value)} required
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl mb-3 focus:ring-2 focus:ring-brand-300 outline-none" placeholder="e.g. Practice Scales Week 12" />
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">Description</label>
-                    <textarea value={description} onChange={e => setDescription(e.target.value)} required rows="3"
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-brand-300 outline-none resize-none" placeholder="Assignment details..." />
-                    <div className="flex gap-3">
-                      <button type="submit" className="flex-1 py-2.5 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 transition">Post</button>
-                      <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
-                    </div>
-                  </form>
-                )}
-              </div>
-            </div>
-          )}
-        </React.Fragment>
-      );
-    }
-
-    // ─── Balance Update Modal (used by Instructor & Admin) ─────────────────────
-    function BalanceUpdateModal({ studentEmail, studentName, currentUser, onClose, onSuccess }) {
-      const { updateBalance } = useAuth();
-      const [type, setType] = useState('stamps');
-      const [amount, setAmount] = useState('');
-      const [action, setAction] = useState('add');
-      const [error, setError] = useState('');
-      const [success, setSuccess] = useState(false);
-
-      function handleSubmit(e) {
-        e.preventDefault();
-        setError('');
-        const num = parseInt(amount);
-        if (!num || num <= 0) { setError('Enter a positive number.'); return; }
-        const finalAmount = action === 'add' ? num : -num;
-        const result = updateBalance(currentUser, studentEmail, type, finalAmount);
-        if (!result.success) { setError(result.error); }
-        else { setSuccess(true); setTimeout(() => { onSuccess(); onClose(); }, 1200); }
-      }
-
-      return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-brand-600 mb-1">Update Balance</h3>
-            <p className="text-sm text-gray-400 mb-4">{studentName} ({studentEmail})</p>
-            {success ? (
-              <div className="text-center py-8">
-                <span className="text-4xl">✅</span>
-                <p className="mt-2 font-semibold text-emerald-600">Balance updated!</p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit}>
-                {error && <div className="bg-red-50 text-red-600 text-xs font-medium px-3 py-2 rounded-lg border border-red-200 mb-3">{error}</div>}
-                <div className="flex gap-2 mb-3">
-                  <button type="button" onClick={() => setType('stamps')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${type === 'stamps' ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-300' : 'bg-gray-100 text-gray-500'}`}>
-                    Stamps
-                  </button>
-                  <button type="button" onClick={() => setType('coins')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${type === 'coins' ? 'bg-yellow-100 text-yellow-600 ring-2 ring-yellow-300' : 'bg-gray-100 text-gray-500'}`}>
-                    Coins
-                  </button>
-                </div>
-                <div className="flex gap-2 mb-3">
-                  <button type="button" onClick={() => setAction('add')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${action === 'add' ? 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-300' : 'bg-gray-100 text-gray-500'}`}>
-                    + Add
-                  </button>
-                  <button type="button" onClick={() => setAction('subtract')}
-                    className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${action === 'subtract' ? 'bg-red-100 text-red-600 ring-2 ring-red-300' : 'bg-gray-100 text-gray-500'}`}>
-                    - Subtract
-                  </button>
-                </div>
-                <input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="Amount"
-                  className="w-full px-4 py-2 border border-gray-200 rounded-xl mb-4 focus:ring-2 focus:ring-brand-300 outline-none" />
-                <div className="flex gap-3">
-                  <button type="submit" className="flex-1 py-2.5 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 transition">Confirm</button>
-                  <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
-                </div>
-              </form>
-            )}
-          </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-new-email">Email</label>
+          <input class="form-input" id="admin-new-email" type="email" placeholder="newuser@example.com" required />
         </div>
-      );
-    }
-
-    function InstructorDashboard({ navigate }) {
-      const { user, getBalance } = useAuth();
-      const [refreshKey, setRefreshKey] = useState(0);
-      const [editingStudent, setEditingStudent] = useState(null);
-      const allUsers = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-
-      // Privacy: only show students assigned to this instructor
-      const myStudents = allUsers.filter(u => u.role === 'student' && u.instructorId === user.email);
-      const history = JSON.parse(localStorage.getItem('musicJournalHistory') || '[]');
-
-      // Only show practice logs for assigned students (security rule enforced)
-      const myStudentEmails = myStudents.map(s => s.email);
-      const myStudentNames = myStudents.map(s => s.name.toLowerCase());
-      const assignedLogs = history.filter(e =>
-        (e.studentEmail && myStudentEmails.includes(e.studentEmail)) ||
-        (e.studentName && myStudentNames.includes(e.studentName.toLowerCase()))
-      );
-
-      return (
-        <DashboardLayout title="Instructor Dashboard" icon="👩‍🏫" color="bg-brand-500" navigate={navigate}>
-          <div className="flex justify-end mb-4">
-            <PostAssignmentButton userName={user.name} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <DashCard icon="👤" title="My Students" desc={`${myStudents.length} assigned student${myStudents.length !== 1 ? 's' : ''}`} />
-            <DashCard icon="📝" title="Practice Logs" desc={`${assignedLogs.length} entries from your students`} accent="text-amber-500" />
-            <DashCard icon="📧" title="Notifications" desc="Send practice reminders to students" />
-            <DashCard icon="⭐" title="Award Stamps" desc="Review performance and give stamps" />
-            <DashCard icon="🪙" title="Award Coins" desc="Reward consistent practice with coins" />
-            <DashCard icon="📊" title="Class Reports" desc="View progress across all students" />
-          </div>
-
-          {/* My Assigned Students with Balance Management */}
-          <div className="mt-8 bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-brand-600">My Assigned Students — Balances</h3>
-            </div>
-            {myStudents.length === 0 ? (
-              <div className="px-6 py-8 text-center text-gray-400">No students assigned to you yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Stamps</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Coins</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myStudents.map((s, i) => {
-                      const bal = getBalance(s.email);
-                      return (
-                        <tr key={i} className="border-t border-gray-50 hover:bg-gray-50">
-                          <td className="px-6 py-3 font-semibold text-brand-600">{s.name}</td>
-                          <td className="px-6 py-3 text-gray-500">{s.email}</td>
-                          <td className="px-6 py-3 font-bold text-amber-600">{bal.stamps}</td>
-                          <td className="px-6 py-3 font-bold text-yellow-600">{bal.coins}</td>
-                          <td className="px-6 py-3">
-                            <button onClick={() => setEditingStudent(s)}
-                              className="px-4 py-1.5 bg-brand-500 text-white rounded-lg text-xs font-bold hover:bg-brand-600 transition">
-                              Update Balance
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {editingStudent && (
-            <BalanceUpdateModal
-              studentEmail={editingStudent.email}
-              studentName={editingStudent.name}
-              currentUser={user}
-              onClose={() => setEditingStudent(null)}
-              onSuccess={() => setRefreshKey(k => k + 1)}
-            />
-          )}
-
-          <div className="mt-8 bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-bold text-brand-600 mb-3">Open Music Practice Journal</h3>
-            <p className="text-sm text-gray-500 mb-3">To open your Music Practice Journal, click the button below or copy the file path into your browser:</p>
-            <div className="bg-gray-50 rounded-lg px-4 py-2 mb-4 overflow-x-auto">
-              <code className="text-xs text-brand-500 select-all break-all">file:///Users/lilliany/Desktop/music%20practice%20journal%20app/index.html</code>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a href="index.html" className="px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 transition shadow">
-                Open Practice Journal
-              </a>
-            </div>
-          </div>
-        </DashboardLayout>
-      );
-    }
-
-    function AdminDashboard({ navigate }) {
-      const { user, assignTeacher, unassignTeacher, getBalance } = useAuth();
-      const [refreshKey, setRefreshKey] = useState(0);
-      const [editingStudent, setEditingStudent] = useState(null);
-      const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
-      const students = users.filter(u => u.role === 'student');
-      const instructors = users.filter(u => u.role === 'instructor');
-      const admins = users.filter(u => u.role === 'admin');
-      const unassignedStudents = students.filter(s => !s.instructorId);
-      const assignedStudents = students.filter(s => s.instructorId);
-
-      const [selectedTeacher, setSelectedTeacher] = useState({});
-
-      function handleAssign(studentEmail) {
-        const instructorEmail = selectedTeacher[studentEmail];
-        if (!instructorEmail) return;
-        assignTeacher(studentEmail, instructorEmail);
-        setSelectedTeacher(prev => { const n = {...prev}; delete n[studentEmail]; return n; });
-        setRefreshKey(k => k + 1);
-      }
-
-      function handleUnassign(studentEmail) {
-        unassignTeacher(studentEmail);
-        setRefreshKey(k => k + 1);
-      }
-
-      return (
-        <DashboardLayout title="Admin Dashboard" icon="🔑" color="bg-red-600" navigate={navigate}>
-          <div className="flex justify-end mb-4">
-            <PostAssignmentButton userName={user.name} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <StatCard value={users.length} label="Total Users" icon="👥" />
-            <StatCard value={students.length} label="Students" icon="🎵" />
-            <StatCard value={instructors.length} label="Instructors" icon="👩‍🏫" />
-            <StatCard value={admins.length} label="Admins" icon="🔑" />
-          </div>
-
-          {/* Assign Teacher Section */}
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <span className="text-lg">👩‍🏫</span>
-              <h3 className="font-bold text-brand-600">Assign Teacher to Students</h3>
-            </div>
-
-            {/* Unassigned Students */}
-            <div className="px-6 py-3 bg-amber-50 border-b border-amber-100">
-              <p className="text-xs font-bold text-amber-600 uppercase tracking-wide">Unassigned Students ({unassignedStudents.length})</p>
-            </div>
-            {unassignedStudents.length === 0 ? (
-              <div className="px-6 py-6 text-center text-gray-400 text-sm border-b border-gray-100">All students have been assigned a teacher.</div>
-            ) : (
-              <div className="overflow-x-auto border-b border-gray-100">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Student</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Assign Teacher</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unassignedStudents.map((s, i) => (
-                      <tr key={i} className="border-t border-gray-50 hover:bg-gray-50">
-                        <td className="px-6 py-3 font-semibold text-brand-600">{s.name}</td>
-                        <td className="px-6 py-3 text-gray-500">{s.email}</td>
-                        <td className="px-6 py-3">
-                          <select
-                            value={selectedTeacher[s.email] || ''}
-                            onChange={e => setSelectedTeacher(prev => ({...prev, [s.email]: e.target.value}))}
-                            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-300 outline-none"
-                          >
-                            <option value="">Select Teacher...</option>
-                            {instructors.map((t, j) => (
-                              <option key={j} value={t.email}>{t.name}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-6 py-3">
-                          <button
-                            onClick={() => handleAssign(s.email)}
-                            disabled={!selectedTeacher[s.email]}
-                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${
-                              selectedTeacher[s.email]
-                                ? 'bg-brand-500 text-white hover:bg-brand-600'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            Assign
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Already Assigned Students */}
-            <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100">
-              <p className="text-xs font-bold text-emerald-600 uppercase tracking-wide">Assigned Students ({assignedStudents.length})</p>
-            </div>
-            {assignedStudents.length === 0 ? (
-              <div className="px-6 py-6 text-center text-gray-400 text-sm">No students assigned yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Student</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Assigned Teacher</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {assignedStudents.map((s, i) => {
-                      const teacher = instructors.find(t => t.email === s.instructorId);
-                      return (
-                        <tr key={i} className="border-t border-gray-50 hover:bg-gray-50">
-                          <td className="px-6 py-3 font-semibold text-brand-600">{s.name}</td>
-                          <td className="px-6 py-3 text-gray-500">{s.email}</td>
-                          <td className="px-6 py-3">
-                            <span className="px-3 py-1 bg-brand-50 text-brand-500 rounded-full text-xs font-bold">
-                              {teacher ? teacher.name : s.instructorId}
-                            </span>
-                          </td>
-                          <td className="px-6 py-3">
-                            <button
-                              onClick={() => handleUnassign(s.email)}
-                              className="px-4 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-bold hover:bg-red-100 transition"
-                            >
-                              Unassign
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Student Balances — Admin can update ANY student */}
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden mb-8">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <span className="text-lg">💰</span>
-              <h3 className="font-bold text-brand-600">Student Balances</h3>
-            </div>
-            {students.length === 0 ? (
-              <div className="px-6 py-8 text-center text-gray-400">No students registered yet.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-left">
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Student</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Stamps</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Coins</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Teacher</th>
-                      <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((s, i) => {
-                      const bal = getBalance(s.email);
-                      const teacher = s.instructorId ? instructors.find(t => t.email === s.instructorId) : null;
-                      return (
-                        <tr key={i} className="border-t border-gray-50 hover:bg-gray-50">
-                          <td className="px-6 py-3">
-                            <p className="font-semibold text-brand-600">{s.name}</p>
-                            <p className="text-xs text-gray-400">{s.email}</p>
-                          </td>
-                          <td className="px-6 py-3 font-bold text-amber-600">{bal.stamps}</td>
-                          <td className="px-6 py-3 font-bold text-yellow-600">{bal.coins}</td>
-                          <td className="px-6 py-3 text-xs">
-                            {teacher ? (
-                              <span className="px-2 py-1 bg-brand-50 text-brand-500 rounded-full font-bold">{teacher.name}</span>
-                            ) : (
-                              <span className="text-amber-500 italic">Unassigned</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-3">
-                            <button onClick={() => setEditingStudent(s)}
-                              className="px-4 py-1.5 bg-brand-500 text-white rounded-lg text-xs font-bold hover:bg-brand-600 transition">
-                              Update Balance
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {editingStudent && (
-            <BalanceUpdateModal
-              studentEmail={editingStudent.email}
-              studentName={editingStudent.name}
-              currentUser={user}
-              onClose={() => setEditingStudent(null)}
-              onSuccess={() => setRefreshKey(k => k + 1)}
-            />
-          )}
-
-          {/* All Users Table */}
-          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="font-bold text-brand-600">All Registered Users</h3>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-50 text-left">
-                    <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Name</th>
-                    <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Email</th>
-                    <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Role</th>
-                    <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Teacher / Students</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 ? (
-                    <tr><td colSpan="4" className="px-6 py-8 text-center text-gray-400">No users registered yet.</td></tr>
-                  ) : (
-                    users.map((u, i) => (
-                      <tr key={i} className="border-t border-gray-50 hover:bg-gray-50">
-                        <td className="px-6 py-3 font-semibold text-brand-600">{u.name}</td>
-                        <td className="px-6 py-3 text-gray-500">{u.email}</td>
-                        <td className="px-6 py-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                            u.role === 'admin' ? 'bg-red-100 text-red-600' :
-                            u.role === 'instructor' ? 'bg-brand-100 text-brand-500' :
-                            'bg-emerald-100 text-emerald-600'
-                          }`}>{u.role}</span>
-                        </td>
-                        <td className="px-6 py-3 text-xs text-gray-500">
-                          {u.role === 'student' && u.instructorId && (
-                            <span>{instructors.find(t => t.email === u.instructorId)?.name || u.instructorId}</span>
-                          )}
-                          {u.role === 'student' && !u.instructorId && (
-                            <span className="text-amber-500 italic">Unassigned</span>
-                          )}
-                          {u.role === 'instructor' && (
-                            <span>{(u.studentsList || []).length} student{(u.studentsList || []).length !== 1 ? 's' : ''}</span>
-                          )}
-                          {u.role === 'admin' && <span className="text-gray-300">—</span>}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="mt-8 bg-white rounded-2xl shadow-md p-6">
-            <h3 className="font-bold text-brand-600 mb-3">Open Music Practice Journal</h3>
-            <p className="text-sm text-gray-500 mb-3">To open your Music Practice Journal, click the button below or copy the file path into your browser:</p>
-            <div className="bg-gray-50 rounded-lg px-4 py-2 mb-4 overflow-x-auto">
-              <code className="text-xs text-brand-500 select-all break-all">file:///Users/lilliany/Desktop/music%20practice%20journal%20app/index.html</code>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a href="index.html" className="px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 transition shadow">
-                Open Practice Journal
-              </a>
-            </div>
-          </div>
-        </DashboardLayout>
-      );
-    }
-
-    // ─── Reusable Cards ───────────────────────────────────────────────────────────
-    function DashCard({ icon, title, desc, accent = 'text-brand-600' }) {
-      return (
-        <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition cursor-pointer">
-          <div className="text-2xl mb-2">{icon}</div>
-          <h4 className={`font-bold text-sm ${accent}`}>{title}</h4>
-          <p className="text-xs text-gray-400 mt-1">{desc}</p>
+        <div class="form-group">
+          <label class="form-label" for="admin-new-password">Password</label>
+          <input class="form-input" id="admin-new-password" type="password" placeholder="At least 6 characters" required minlength="6" />
         </div>
-      );
-    }
-
-    function StatCard({ value, label, icon }) {
-      return (
-        <div className="bg-white rounded-2xl shadow-md p-5 text-center">
-          <div className="text-2xl mb-1">{icon}</div>
-          <div className="text-3xl font-extrabold text-brand-500">{value}</div>
-          <div className="text-xs text-gray-400 mt-1 font-semibold">{label}</div>
+        <div class="form-group">
+          <label class="form-label" for="admin-new-role">Role</label>
+          <select class="form-select" id="admin-new-role" required>
+            <option value="student">🎵 Student</option>
+            <option value="instructor">👩‍🏫 Instructor</option>
+            <option value="admin">🔑 Administrator</option>
+          </select>
         </div>
-      );
-    }
+        <button class="auth-btn" type="submit">Create User</button>
+      </form>
+    </div>
+  </div>
 
-    // ─── App Router ───────────────────────────────────────────────────────────────
-    function App() {
-      const { path, navigate } = useRouter();
-      const { user } = useAuth();
+  <div class="auth-footer">
+    &copy; 2026 Happy Minds School of Music
+  </div>
+</div>
 
-      // Auto-redirect logged-in users away from auth pages
-      useEffect(() => {
-        if (user && (path === '/' || path === '/login' || path === '/register')) {
-          navigate(getRoleDashboard(user.role));
-        }
-      }, [user, path]);
+<script src="security-rules.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// AUTH SYSTEM — Vanilla JavaScript
+// ════════════════════════════════════════════════════════════════════════════
 
-      switch (path) {
-        case '/':
-        case '/login':
-          return <LoginPage navigate={navigate} />;
-        case '/register':
-          return <RegisterPage navigate={navigate} />;
-        case '/student-dashboard':
-          return (
-            <ProtectedRoute allowedRoles={['student']} navigate={navigate}>
-              <StudentDashboard navigate={navigate} />
-            </ProtectedRoute>
-          );
-        case '/instructor-dashboard':
-          return (
-            <ProtectedRoute allowedRoles={['instructor']} navigate={navigate}>
-              <InstructorDashboard navigate={navigate} />
-            </ProtectedRoute>
-          );
-        case '/admin-dashboard':
-          return (
-            <ProtectedRoute allowedRoles={['admin']} navigate={navigate}>
-              <AdminDashboard navigate={navigate} />
-            </ProtectedRoute>
-          );
-        default:
-          return (
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-5xl mb-4">404</div>
-                <p className="text-gray-400 mb-4">Page not found</p>
-                <a href="#/login" className="text-brand-500 font-semibold hover:underline">Go to Login</a>
-              </div>
-            </div>
-          );
+// ── On page load: if already logged in, redirect to index.html ──────────
+(function() {
+  const session = localStorage.getItem('mj_auth_user');
+  if (session) {
+    try {
+      const user = JSON.parse(session);
+      if (user && user.email && user.role) {
+        window.location.href = 'index.html';
+        return;
       }
-    }
+    } catch(e) {}
+  }
 
-    // ─── Mount ────────────────────────────────────────────────────────────────────
-    function Root() {
-      return (
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      );
-    }
+  // Seed default admin if no users exist
+  seedDefaultAdmin();
+})();
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
-  </script>
+function seedDefaultAdmin() {
+  const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+  if (users.length === 0) {
+    users.push({
+      name: 'Admin',
+      email: 'admin@music.com',
+      password: 'admin123',
+      role: 'admin',
+      instructorId: null,
+      studentsList: [],
+      createdAt: Date.now()
+    });
+    localStorage.setItem('mj_auth_users', JSON.stringify(users));
+  }
+}
+
+// ── Tab switching ────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-register').classList.toggle('active', tab === 'register');
+  hideMessages();
+}
+
+function hideMessages() {
+  document.getElementById('auth-error').classList.remove('show');
+  document.getElementById('auth-success').classList.remove('show');
+}
+
+function showError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+  document.getElementById('auth-success').classList.remove('show');
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg;
+  el.classList.add('show');
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+// ── Password toggle ─────────────────────────────────────────────────────
+function togglePassword(inputId, eyeEl) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    eyeEl.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    eyeEl.textContent = '👁️';
+  }
+}
+
+// ── Login ────────────────────────────────────────────────────────────────
+function handleLogin(e) {
+  e.preventDefault();
+  hideMessages();
+
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const password = document.getElementById('login-password').value;
+
+  const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+  const found = users.find(u => u.email.toLowerCase() === email);
+
+  if (!found) {
+    showError('No account found with that email.');
+    return;
+  }
+  if (found.password !== password) {
+    showError('Incorrect password. Please try again.');
+    return;
+  }
+
+  // Create session (don't store password)
+  const session = {
+    name: found.name,
+    email: found.email,
+    role: found.role,
+    instructorId: found.instructorId || null,
+    studentsList: found.studentsList || []
+  };
+  localStorage.setItem('mj_auth_user', JSON.stringify(session));
+
+  // Redirect to dashboard
+  window.location.href = 'index.html';
+}
+
+// ── Register (Student or Instructor only) ───────────────────────────────
+function handleRegister(e) {
+  e.preventDefault();
+  hideMessages();
+
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const password = document.getElementById('reg-password').value;
+  const role = document.getElementById('reg-role').value;
+
+  if (!name || !email || !password) {
+    showError('Please fill in all fields.');
+    return;
+  }
+  if (password.length < 6) {
+    showError('Password must be at least 6 characters.');
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+  if (users.some(u => u.email.toLowerCase() === email)) {
+    showError('An account with that email already exists.');
+    return;
+  }
+
+  const newUser = {
+    name: name,
+    email: email,
+    password: password,
+    role: role,
+    instructorId: role === 'student' ? null : undefined,
+    studentsList: role === 'instructor' ? [] : undefined,
+    createdAt: Date.now()
+  };
+
+  users.push(newUser);
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+
+  // Initialize balance for students
+  if (role === 'student') {
+    const balances = JSON.parse(localStorage.getItem('mj_balances') || '{}');
+    if (!balances[email]) {
+      balances[email] = { stamps: 0, coins: 0 };
+      localStorage.setItem('mj_balances', JSON.stringify(balances));
+    }
+  }
+
+  showSuccess('Account created! You can now sign in.');
+
+  // Clear form and switch to login
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-password').value = '';
+  document.getElementById('reg-role').value = 'student';
+
+  setTimeout(() => switchTab('login'), 1200);
+}
+
+// ── Admin: Create any user (including Admin) ────────────────────────────
+function handleAdminCreateUser(e) {
+  e.preventDefault();
+  hideMessages();
+
+  // Verify the current session is admin
+  const session = JSON.parse(localStorage.getItem('mj_auth_user') || 'null');
+  if (!session || session.role !== 'admin') {
+    showError('Only administrators can create users here.');
+    return;
+  }
+
+  const name = document.getElementById('admin-new-name').value.trim();
+  const email = document.getElementById('admin-new-email').value.trim().toLowerCase();
+  const password = document.getElementById('admin-new-password').value;
+  const role = document.getElementById('admin-new-role').value;
+
+  if (!name || !email || !password) {
+    showError('Please fill in all fields.');
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+  if (users.some(u => u.email.toLowerCase() === email)) {
+    showError('An account with that email already exists.');
+    return;
+  }
+
+  const newUser = {
+    name: name,
+    email: email,
+    password: password,
+    role: role,
+    instructorId: role === 'student' ? null : undefined,
+    studentsList: role === 'instructor' ? [] : undefined,
+    createdAt: Date.now()
+  };
+
+  users.push(newUser);
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+
+  if (role === 'student') {
+    const balances = JSON.parse(localStorage.getItem('mj_balances') || '{}');
+    if (!balances[email]) {
+      balances[email] = { stamps: 0, coins: 0 };
+      localStorage.setItem('mj_balances', JSON.stringify(balances));
+    }
+  }
+
+  showSuccess(`${role.charAt(0).toUpperCase() + role.slice(1)} account "${name}" created successfully!`);
+
+  document.getElementById('admin-new-name').value = '';
+  document.getElementById('admin-new-email').value = '';
+  document.getElementById('admin-new-password').value = '';
+  document.getElementById('admin-new-role').value = 'student';
+}
+
+// ── Forgot Password ─────────────────────────────────────────────────────
+let forgotFoundEmail = null;
+
+function showForgotPassword() {
+  hideMessages();
+  document.getElementById('form-login').classList.remove('active');
+  document.getElementById('form-register').classList.remove('active');
+  document.getElementById('forgot-panel').classList.add('active');
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('forgot-email').value = '';
+  document.getElementById('forgot-new-password').value = '';
+  document.getElementById('forgot-confirm-password').value = '';
+  document.getElementById('new-password-fields').classList.remove('show');
+  document.getElementById('forgot-btn').textContent = 'Find My Account';
+  forgotFoundEmail = null;
+}
+
+function hideForgotPassword() {
+  hideMessages();
+  document.getElementById('forgot-panel').classList.remove('active');
+  switchTab('login');
+  forgotFoundEmail = null;
+}
+
+function handleForgotPassword(e) {
+  e.preventDefault();
+  hideMessages();
+
+  const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+  const users = JSON.parse(localStorage.getItem('mj_auth_users') || '[]');
+  const found = users.find(u => u.email.toLowerCase() === email);
+
+  // Step 1: Find account
+  if (!forgotFoundEmail) {
+    if (!found) {
+      showError('No account found with that email address.');
+      return;
+    }
+    // Account found — show new password fields
+    forgotFoundEmail = email;
+    showSuccess('Account found! Now enter your new password below.');
+    document.getElementById('new-password-fields').classList.add('show');
+    document.getElementById('forgot-btn').textContent = 'Reset Password';
+    document.getElementById('forgot-email').disabled = true;
+    document.getElementById('forgot-new-password').focus();
+    document.getElementById('forgot-new-password').required = true;
+    document.getElementById('forgot-confirm-password').required = true;
+    return;
+  }
+
+  // Step 2: Reset password
+  const newPass = document.getElementById('forgot-new-password').value;
+  const confirmPass = document.getElementById('forgot-confirm-password').value;
+
+  if (!newPass || newPass.length < 6) {
+    showError('New password must be at least 6 characters.');
+    return;
+  }
+  if (newPass !== confirmPass) {
+    showError('Passwords do not match.');
+    return;
+  }
+
+  // Update password in storage
+  const userIdx = users.findIndex(u => u.email.toLowerCase() === forgotFoundEmail);
+  if (userIdx === -1) {
+    showError('Something went wrong. Please try again.');
+    return;
+  }
+  users[userIdx].password = newPass;
+  localStorage.setItem('mj_auth_users', JSON.stringify(users));
+
+  showSuccess('Password reset successfully! You can now sign in with your new password.');
+  forgotFoundEmail = null;
+
+  // Reset form and go back to login after a moment
+  document.getElementById('forgot-email').disabled = false;
+  setTimeout(() => {
+    hideForgotPassword();
+    document.getElementById('login-email').value = users[userIdx].email;
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-password').focus();
+  }, 1800);
+}
+
+// ── Show admin section if admin is logged in (came back from index) ─────
+function checkAdminSection() {
+  const session = JSON.parse(localStorage.getItem('mj_auth_user') || 'null');
+  if (session && session.role === 'admin') {
+    document.getElementById('admin-create-section').classList.add('show');
+  }
+}
+// This won't run on initial load because the redirect fires first,
+// but it's available if an admin navigates back to auth.html manually
+checkAdminSection();
+</script>
+
 </body>
 </html>
